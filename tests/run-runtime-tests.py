@@ -34,7 +34,8 @@ def copy_private(source, target):
     shutil.copy2(source, target)
 
 
-def stage_install(layout, stage):
+def stage_install(layout, stage, mod_dir=None):
+    mod_dir = mod_dir or ROOT / "dist/RewardViewer"
     target = stage / layout.root.name
     special = (layout.executable, layout.data_dir, layout.pack)
     def stage_path(source, destination):
@@ -91,7 +92,10 @@ def stage_install(layout, stage):
     mods = executable.parent / "mods/RewardViewer"
     mods.mkdir(parents=True)
     for name in ("RewardViewer.dll", "RewardViewer.json"):
-        shutil.copy2(ROOT / "dist/RewardViewer" / name, mods / name)
+        shutil.copy2(mod_dir / name, mods / name)
+        # The test assembly references RewardViewer too. Both loader paths must
+        # use the pinned artifact, even when tests were built against another game.
+        shutil.copy2(mod_dir / name, data_dir / name)
     pack = target / layout.pack.relative_to(layout.root)
     copy_private(layout.pack, pack)
     return executable, pack
@@ -161,6 +165,7 @@ def main():
     parser.add_argument("--executable", type=Path)
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--pack", type=Path)
+    parser.add_argument("--mod-dir", type=Path, help="Test this existing DLL/manifest package, while compiling tests against the selected game")
     args = parser.parse_args()
     env = dict(os.environ, DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "reward-viewer-dotnet"),
                DOTNET_CLI_TELEMETRY_OPTOUT="1", DOTNET_GENERATE_ASPNET_CERTIFICATE="false", DOTNET_NOLOGO="1")
@@ -176,11 +181,17 @@ def main():
             game = data.parents[2] if sys.platform == "darwin" else data.parent
             args.data_dir = data
     layout = resolve_layout(game, executable=args.executable, data_dir=args.data_dir, pack=args.pack)
+    mod_dir = args.mod_dir.resolve() if args.mod_dir else ROOT / "dist/RewardViewer"
+    if args.mod_dir:
+        for name in ("RewardViewer.dll", "RewardViewer.json"):
+            if not (mod_dir / name).is_file():
+                parser.error(f"Missing pinned mod file: {mod_dir / name}")
     print(f"Testing {layout.data_suffix}: {layout.executable}", flush=True)
     subprocess.run(["dotnet", "build", "tests/RuntimeTests.csproj", "-c", "Release", "--disable-build-servers",
                     f"-p:Sts2DataDir={layout.data_dir}"], cwd=ROOT, env=env, check=True)
     stage = Path(tempfile.mkdtemp(prefix="reward-viewer-tests-"))
-    executable, pack = stage_install(layout, stage)
+    print(f"TEST_MOD_SHA256: {hashlib.sha256((mod_dir / 'RewardViewer.dll').read_bytes()).hexdigest()}", flush=True)
+    executable, pack = stage_install(layout, stage, mod_dir)
     configure_test_pack(pack)
     print(f"Test staging directory: {stage}", flush=True)
     command = [str(executable), "--headless", "--force-steam=off", "--log-file", str(stage / "engine.log"),

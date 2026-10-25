@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>RewardViewer</AssemblyName>
-    <Version>0.5.2</Version>
+    <Version>0.6.0</Version>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <SelfContained>false</SelfContained>

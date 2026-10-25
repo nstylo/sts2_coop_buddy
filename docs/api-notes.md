@@ -23,7 +23,7 @@ Inspected locally on 2026-10-25 using ILSpy against the installed Steam macOS ar
 - `CardReward.Cards: IEnumerable<CardModel>` is a projection of its current card creation results. `Reroll()` clears and repopulates that list. `AfterGenerated` exists as a native event but can fire before later set-level modifications; observing the current models also covers those modifications.
 - `LinkedRewardSet.Rewards: IReadOnlyList<Reward>` contains mutually linked options. Once its parent is selected, remaining card choices should no longer be displayed.
 
-## Open picker and UI hooks (0.5.2)
+## Open picker and UI hooks (0.6.0)
 
 `CardReward.OnSelect(): Task<bool>` executes locally for both the owning player and remote players after native `RewardSelectedMessage` processing. Its task covers the open card picker and ends on pick/skip/cancel. Tracking the enclosing rewards-set task would incorrectly include unopened rewards and already-closed pickers.
 
@@ -67,7 +67,7 @@ Shared collaboration requires this mod on the host and participating peers. The 
 
 `[ModInitializer(nameof(Initialize))]` works on a static class. No `Node` subclass, source generator, PCK, or publicizer is needed for this implementation. The native loader searches `Path.Combine(Path.GetDirectoryName(OS.GetExecutablePath()), "mods")`; on macOS this resolves inside `SlayTheSpire2.app/Contents/MacOS`.
 
-The manifest marks `affects_gameplay: false`: the production mod observes native state and sends only advisory UI metadata. It changes no RNG and issues no gameplay choices. STS2 explicitly supports non-gameplay mod messages in its native type sorting and message bus. The test assembly is separate and must not be installed as a production mod.
+The manifest marks `affects_gameplay: false`: the production mod observes native state and sends only advisory UI metadata. It changes no RNG and issues no gameplay choices. Beta explicitly supports non-gameplay mod messages in its native type sorting; the public compatibility measures are documented below. The test assembly is separate and must not be installed as a production mod.
 
 Platform discovery is shared in `GamePaths.props`. The AnyCPU artifact is intended for both Mac architectures; current validation is recorded in the compatibility guide. Windows/Linux layout names follow the template, but their native game assemblies/runtimes have not been tested here. See the [compatibility matrix](compatibility.md).
 
@@ -76,3 +76,11 @@ Platform discovery is shared in `GamePaths.props`. The AnyCPU artifact is intend
 - [Alchyr's template](https://github.com/Alchyr/ModTemplate-StS2): entrypoint, manifest shape, target framework, and references. The full template was unnecessary because this mod has no custom assets or scripts.
 - [BaseLib](https://github.com/Alchyr/BaseLib-StS2): considered as an optional dependency; not needed for the inspected native reward lifecycle.
 - [ViewMultiplayerCardRewards](https://github.com/gboyd068/Sts2-ViewMultiplayerCardRewards): useful comparison for reward collection and card inspection. Its implementation uses BaseLib custom messages; this project uses the newer installed game's existing remote reward objects instead. No source from that implementation is included.
+
+## Public and beta compatibility (v0.6.0)
+
+Public v0.107.1 (game DLL SHA-256 `e7ceb80669bfaf5c8fccabaa126ae2bb283aba514be5b5b55612579cfd285f18`) and beta v0.111.0 were both inspected locally. `NativeCompatibility` resolves two renamed properties once: public `RunLobby.ConnectedPlayerIds` versus beta `PlayerIds`, and public `NControllerManager.IsUsingController` versus beta `IsUsingDirectionalNavigation`. The reward lifecycle, native screens, hover tips and Harmony targets pass on both.
+
+Public `NetTypeCache` sorts all message types by ordinal class name. The two collaboration classes are named `ZZZRewardViewerViewMessage` and `ZZZRewardViewerVoteMessage` so they follow every vanilla type. Tests assert every native ID remains identical with and without the mod. Beta explicitly sorts non-gameplay messages after native types. Native receivers reject unknown IDs and continue handling normal packets; an unmodded host cannot deserialize or relay our view/vote metadata. On public, these dropped packets can generate native error log entries. This mod is optional for reward viewing; installing it does not give vanilla players its UI.
+
+`GamePaths.props` prioritizes explicit HintPath references over candidate DLLs from old test output. Without that priority, a build after switching Steam branches could silently reference an older copied `sts2.dll` in `tests/bin`. Release checks rebuild against public and pin that DLL with `--mod-dir` when testing beta.

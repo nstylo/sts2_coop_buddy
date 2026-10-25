@@ -16,7 +16,7 @@ public static class ModEntry
         new Harmony(Id).PatchAll(typeof(ModEntry).Assembly);
         RunManager.Instance.RoomExited += RewardTracker.Clear;
         RunManager.Instance.RunStarted += _ => RewardTracker.Clear();
-        Logger.Info("Loaded Co-op Reward Viewer 0.5.2.");
+        Logger.Info("Loaded Co-op Reward Viewer 0.6.0.");
     }
 
     // A viewer failure must not interrupt the game's reward or networking logic.

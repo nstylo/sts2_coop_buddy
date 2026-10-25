@@ -2,7 +2,7 @@
 
 A small Slay the Spire 2 mod for switching between players' currently open card rewards. Uses the vanilla player-status card icon and full native reward screen. Teammates can share cursors and recommend cards with native player portraits; only the owner can take a reward.
 
-The current development build targets **public-beta v0.111.0** and **.NET 9**. Our release target is **stable/main v0.107.1**; that port needs validation against stable's installed assemblies. The current package still declares `min_game_version: 0.111.0` and is not yet a stable release. See [branch compatibility](docs/branches.md).
+Version **0.6.0** supports the latest public **v0.107.1** and public-beta **v0.111.0** with one **.NET 9** DLL, built against public and tested unchanged on both branches. The manifest minimum is `0.107.1`. Supporting both current branches is the release policy; see [branch compatibility](docs/branches.md).
 
 No BaseLib, NuGet packages, separate networking transport, or PCK required. Harmony and GodotSharp are referenced from your installed game.
 
@@ -24,7 +24,7 @@ For a different Steam library, copy `local.props.example` to `local.props` and s
 dotnet build -c Release -p:Sts2DataDir="/path/to/directory/containing/sts2.dll"
 ```
 
-The two distributable files are `dist/RewardViewer/RewardViewer.dll` and `dist/RewardViewer/RewardViewer.json`. A ZIP is also generated at `dist/RewardViewer-0.5.2.zip`. Do not distribute the game's assemblies or the runtime test output.
+The two distributable files are `dist/RewardViewer/RewardViewer.dll` and `dist/RewardViewer/RewardViewer.json`. A ZIP is also generated at `dist/RewardViewer-0.6.0.zip`. Do not distribute the game's assemblies or the runtime test output.
 
 ## Steam Workshop
 
@@ -36,7 +36,7 @@ python3 tools/workshop.py setup
 python3 tools/workshop.py upload --dry-run
 ```
 
-To submit it using your logged-in Steam account, run `python3 tools/workshop.py upload`. The initial listing is **private** and marked for **public-beta v0.111.0**. Its ID is retained in `workshop/mod_id.txt` for future updates. See [Workshop publishing](docs/workshop.md) for review, existing-item updates and subscription testing.
+To submit it using your logged-in Steam account, run `python3 tools/workshop.py upload`. The initial listing is **private** and covers **public and public-beta** under one subscription. Its ID is retained in `workshop/mod_id.txt` for future updates. See [Workshop publishing](docs/workshop.md) for review, existing-item updates and subscription testing.
 
 ## Install
 
@@ -80,7 +80,7 @@ mkdir -p "$mods/RewardViewer"
 cp dist/RewardViewer/RewardViewer.dll dist/RewardViewer/RewardViewer.json "$mods/RewardViewer/"
 ```
 
-Launch through Steam, accept the game's mod-loading notice if prompted, enable Co-op Reward Viewer, and restart if requested. Confirm `[RewardViewer] Loaded Co-op Reward Viewer 0.5.2.` in the game log. Steam updates may remove files inside the app bundle; reinstall the two files if needed. To uninstall, remove only the `RewardViewer` folder while the game is closed.
+Launch through Steam, accept the game's mod-loading notice if prompted, enable Co-op Reward Viewer, and restart if requested. Confirm `[RewardViewer] Loaded Co-op Reward Viewer 0.6.0.` in the game log. Steam updates may remove files inside the app bundle; reinstall the two files if needed. To uninstall, remove only the `RewardViewer` folder while the game is closed.
 
 ## Use
 
@@ -96,7 +96,7 @@ Open your card reward using the normal reward popup. A clickable vanilla card ic
 
 Only the currently open reward is shared. Unopened rewards and queued reward sets have no button. Picking, skipping or backing out removes that reward; reopening adds it again. Rerolls refresh the preview. If the watched reward closes or its owner disconnects, your own pending picker reappears automatically. Room/run transitions clear all state.
 
-Basic reward viewing uses STS2's native reward lifecycle. **For shared cursors and recommendations, install v0.5.2 on the host and every participating player.** These features use small UI messages through the game's existing networking. Use the same mod version on all participating peers. Custom rewards implemented outside the native lifecycle are outside this scope.
+Basic reward viewing uses STS2's native reward lifecycle and works when teammates do not install this mod. Those players retain the vanilla UI and do not see votes or spectator cursors. **For shared cursors and recommendations, install v0.6.0 on the host and every participating player.** These features use small UI messages through the game's existing networking. An unmodded host cannot relay the mod's advisory messages. Other players may remain unmodded; keep all modded participants on the same version. This does not let different STS2 game versions join each other. Custom rewards implemented outside the native lifecycle are outside this scope.
 
 ## How it works
 

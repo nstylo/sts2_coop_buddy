@@ -103,7 +103,7 @@ internal sealed class RewardOverlay
         var manager = RunManager.Instance;
         var open = RewardTracker.GetOpenRewards();
         bool multiplayer = manager.IsInProgress && !manager.IsSingleplayerOrFakeMultiplayer;
-        var connected = manager.RunLobby?.PlayerIds.ToHashSet() ?? [];
+        var connected = NativeCompatibility.ConnectedPlayers.ToHashSet();
         open.RemoveAll(entry => !multiplayer || !connected.Contains(entry.Player.NetId) || entry.Player.Creature.IsDead);
 
         foreach (var row in _run.GlobalUi.MultiplayerPlayerContainer.GetChildren().OfType<NMultiplayerPlayerState>())
@@ -217,7 +217,7 @@ internal sealed class RewardOverlay
     {
         if (!GodotObject.IsInstanceValid(item.Button) || !item.Button.IsInsideTree()) return;
         bool emphasized = item.Button.Visible && (item.MouseOver || item.Focused &&
-            NControllerManager.Instance?.IsUsingDirectionalNavigation == true);
+            NativeCompatibility.IsUsingDirectionalNavigation);
         if (emphasized != item.Emphasized)
         {
             item.Emphasized = emphasized;

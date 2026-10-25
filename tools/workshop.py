@@ -15,6 +15,9 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tests"))
+from game_layout import resolve_layout
+
 WORKSPACE = ROOT / "workshop"
 FILES = ("RewardViewer.dll", "RewardViewer.json")
 UPLOADER_VERSION = "v0.2.0"
@@ -110,12 +113,14 @@ def validate_workspace():
     return saved_id
 
 
-def prepare(build=True):
+def prepare(build=True, data_dir=None):
     if build:
         env = dict(os.environ, DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "reward-viewer-dotnet"),
                    DOTNET_GENERATE_ASPNET_CERTIFICATE="false", DOTNET_CLI_TELEMETRY_OPTOUT="1")
-        subprocess.run(["dotnet", "build", "RewardViewer.csproj", "-c", "Release", "--disable-build-servers"],
-                       cwd=ROOT, env=env, check=True)
+        command = ["dotnet", "build", "RewardViewer.csproj", "-t:Rebuild", "-c", "Release", "--disable-build-servers"]
+        if data_dir is not None:
+            command += [f"-p:Sts2DataDir={data_dir}"]
+        subprocess.run(command, cwd=ROOT, env=env, check=True)
     source = ROOT / "dist/RewardViewer"
     # Refuse to overwrite unrelated files or accidentally include them in a release.
     content = WORKSPACE / "content"
@@ -133,6 +138,33 @@ def prepare(build=True):
     print(f"Workspace ready: {WORKSPACE}")
 
 
+def check_branches(public_game, beta_game):
+    public = resolve_layout(public_game)
+    beta = resolve_layout(beta_game)
+    prepare(data_dir=public.data_dir)
+    # Keep the public-built DLL fixed while the test assembly is compiled for each
+    # game. The runner installs this same DLL in both loader locations.
+    with tempfile.TemporaryDirectory(prefix="reward-viewer-release-") as temporary:
+        artifact = Path(temporary)
+        distribution = ROOT / "dist/RewardViewer"
+        for name in FILES:
+            shutil.copyfile(distribution / name, artifact / name)
+        try:
+            for branch, layout in [("public", public), ("public-beta", beta)]:
+                print(f"Checking {branch} with the fixed public-built DLL", flush=True)
+                subprocess.run([sys.executable, str(ROOT / "tests/run-runtime-tests.py"), "--game", str(layout.root),
+                                "--data-dir", str(layout.data_dir), "--mod-dir", str(artifact)], cwd=ROOT, check=True)
+        finally:
+            for name in FILES:
+                shutil.copyfile(artifact / name, distribution / name)
+            version = read_json(distribution / "RewardViewer.json")["version"]
+            with zipfile.ZipFile(ROOT / f"dist/RewardViewer-{version}.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+                for name in FILES:
+                    archive.write(distribution / name, name)
+    prepare(build=False)
+    print("Both branches passed with the same DLL. Publish with upload --no-build.")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -140,22 +172,28 @@ def main():
     setup.add_argument("--archive", type=Path, help="Install an already downloaded official release ZIP (checksum verified)")
     stage = commands.add_parser("prepare", help="Build and stage only the DLL and manifest; preserve listing metadata and item ID")
     stage.add_argument("--no-build", action="store_true", help="Use an already built dist/RewardViewer")
+    check = commands.add_parser("check", help="Build against public and test that exact DLL on public and beta")
+    check.add_argument("--public", type=Path, required=True, help="Latest public game's folder or macOS .app")
+    check.add_argument("--beta", type=Path, required=True, help="Latest beta game's folder or macOS .app")
     upload = commands.add_parser("upload", help="Build, stage, and submit to Workshop using the logged-in Steam account")
     upload.add_argument("--dry-run", action="store_true", help="Check the prepared workspace and print the command; no Steam initialization or upload")
     upload.add_argument("--uploader", type=Path, help="Path to an existing official ModUploader executable")
     upload.add_argument("--id", help="Update an existing Workshop item; otherwise use workshop/mod_id.txt or create a new item")
+    upload.add_argument("--no-build", action="store_true", help="Upload the existing package verified by check, without rebuilding it")
     args = parser.parse_args()
     try:
         if args.command == "setup":
             install_uploader(args.archive)
         elif args.command == "prepare":
             prepare(not args.no_build)
+        elif args.command == "check":
+            check_branches(args.public, args.beta)
         else:
             identity = item_id(args.id) if args.id is not None else None
             if args.dry_run:
                 validate_workspace()
             else:
-                prepare()
+                prepare(build=False) if args.no_build else prepare()
             executable = args.uploader.expanduser().resolve() if args.uploader else uploader_path(uploader_platform())
             command = [str(executable), "upload", "-w", str(WORKSPACE)]
             if identity is not None:

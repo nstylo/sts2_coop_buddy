@@ -1,11 +1,14 @@
 {
-  "title": "Co-op Reward Viewer (Beta)",
-  "description": "[h1]See what your teammates are choosing[/h1]\nView your teammates' currently open card rewards in the native Slay the Spire 2 card UI. Click the card icon beside a player's name to switch views and return to your own pending reward.\n\n[list]\n[*]Exact card offers, including upgrades and enchantments.\n[*]Shared cursors when viewing the same reward.\n[*]Left-click a card to recommend it; native portraits show who voted.\n[*]Right-click for native card inspection.\n[*]Only the owner can take or skip their reward.\n[/list]\n\n[h2]Requirements[/h2]\nCurrent development build: public-beta v0.111.0. Stable/main compatibility is pending. Install the same mod version on the host and all participating players for shared cursors and recommendations. No BaseLib or other mods required.\n\n[h2]Platforms[/h2]\nOne managed DLL for macOS, Windows and Linux. Engine checks pass on Mac Apple Silicon and Intel/Rosetta. Native Windows/Linux and Steam co-op validation are still pending.\n\n[h2]Installation[/h2]\nSubscribe, let Steam download the item, enable Co-op Reward Viewer in the game's Mods menu, and restart if prompted. When testing the Workshop copy, move your manually installed RewardViewer folder out of the game's mods directory first.",
+  "title": "Co-op Reward Viewer",
+  "description": "[h1]See what your teammates are choosing[/h1]\nView your teammates' currently open card rewards in the native Slay the Spire 2 card UI. Click the card icon beside a player's name to switch views and return to your own pending reward.\n\n[list]\n[*]Exact card offers, including upgrades and enchantments.\n[*]Shared cursors when viewing the same reward.\n[*]Left-click a card to recommend it; native portraits show who voted.\n[*]Right-click for native card inspection.\n[*]Only the owner can take or skip their reward.\n[/list]\n\n[h2]Requirements[/h2]\nSupports current public v0.107.1 and public-beta v0.111.0 with the same mod package. You can view rewards from teammates who do not install the mod; those teammates keep the vanilla UI. Shared votes and spectator cursors work between players running the same mod version, with a modded host. Unmodded players do not see these additions. No BaseLib or other mods required.\n\n[h2]Platforms[/h2]\nOne managed DLL for macOS, Windows and Linux. Public and beta engine checks pass on Mac Apple Silicon and Intel/Rosetta. Native Windows/Linux and Steam co-op validation are still pending.\n\n[h2]Installation[/h2]\nSubscribe, let Steam download the item, enable Co-op Reward Viewer in the game's Mods menu, and restart if prompted. When testing the Workshop copy, move your manually installed RewardViewer folder out of the game's mods directory first.",
   "visibility": "private",
-  "changeNote": "Version 0.5.2: Initial Workshop package. View open teammate card rewards, share cursors, and recommend cards using native UI.",
-  "tags": ["QoL", "Utility"],
+  "changeNote": "Version 0.6.0: Support public v0.107.1 and beta v0.111.0. Preserve vanilla message IDs for mixed modded/unmodded sessions and adapt native lobby/controller APIs.",
+  "tags": [
+    "QoL",
+    "Utility"
+  ],
   "dependencies": [],
   "contentDescriptors": [],
-  "minBranch": "public-beta",
+  "minBranch": "public",
   "maxBranch": "public-beta"
 }

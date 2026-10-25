@@ -1,6 +1,8 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)local.props" Condition="Exists('$(MSBuildThisFileDirectory)local.props')" />
   <PropertyGroup>
+    <!-- Resolve the selected installation before DLLs copied into old test output. -->
+    <AssemblySearchPaths>{HintPathFromItem};{CandidateAssemblyFiles};{TargetFrameworkDirectory};{RawFileName}</AssemblySearchPaths>
     <!-- Sts2Platform selects the installed game's layout, not the output DLL's platform. -->
     <Sts2Platform Condition="'$(Sts2Platform)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">macos</Sts2Platform>
     <Sts2Platform Condition="'$(Sts2Platform)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linuxbsd</Sts2Platform>

@@ -5,6 +5,7 @@ import io
 import json
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -116,6 +117,26 @@ class WorkshopTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "checksum mismatch"):
                 workshop.install_uploader(archive)
         self.assertFalse(workshop.uploader_path("osx-arm64").exists())
+
+    def test_branch_check_restores_public_artifact_even_if_beta_fails(self):
+        import subprocess
+        original = (self.source / "RewardViewer.dll").read_bytes()
+        public = SimpleNamespace(root=self.root / "public", data_dir=self.root / "public/data")
+        beta = SimpleNamespace(root=self.root / "beta", data_dir=self.root / "beta/data")
+        calls = []
+        def run(command, **kwargs):
+            calls.append(command)
+            pinned = Path(command[command.index("--mod-dir") + 1])
+            self.assertEqual((pinned / "RewardViewer.dll").read_bytes(), original)
+            (self.source / "RewardViewer.dll").write_bytes(b"test runner rebuilt a different artifact")
+            if len(calls) == 2:
+                raise subprocess.CalledProcessError(1, command)
+        with patch.object(workshop, "prepare"), patch.object(workshop, "resolve_layout", side_effect=[public, beta]), \
+                patch.object(workshop.subprocess, "run", side_effect=run):
+            with self.assertRaises(subprocess.CalledProcessError):
+                workshop.check_branches(public.root, beta.root)
+        self.assertEqual((self.source / "RewardViewer.dll").read_bytes(), original)
+        self.assertEqual(calls[0][calls[0].index("--mod-dir") + 1], calls[1][calls[1].index("--mod-dir") + 1])
 
 
 if __name__ == "__main__":

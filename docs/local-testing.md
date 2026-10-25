@@ -1,8 +1,8 @@
 # Test with local game windows
 
-The installed STS2 v0.111.0 has a native `fastmp` mode. It uses the actual multiplayer/reward code with ENet transport. The client connects to `127.0.0.1:33771`; it does not need a second Steam account.
+STS2 public v0.107.1 and beta v0.111.0 have a native `fastmp` mode. It uses the actual multiplayer/reward code with ENet transport. The client connects to `127.0.0.1:33771`; it does not need a second Steam account.
 
-These flags and the current mod package have been checked against the **beta** installation. The stable/main v0.107.1 port and its fastmp verification are pending; see [branch compatibility](branches.md). Do not treat the beta test results as a stable release check.
+The v0.6.0 package passes native engine tests on **public and beta**. Full interactive fastmp and Steam co-op checks remain separate from the automated harness; see [branch compatibility](branches.md). The launcher uses the currently installed Steam branch unless you pass `--game`.
 
 Verified from the installed assembly:
 
@@ -33,7 +33,7 @@ mkdir -p "$mods"
 cp dist/RewardViewer/RewardViewer.dll dist/RewardViewer/RewardViewer.json "$mods/"
 ```
 
-Install the same v0.5.2 package for the host and every client participating in votes/cursor sharing. Both local windows use the same installed files.
+Install the same v0.6.0 package for the host and every client participating in votes/cursor sharing. Both local windows use the same installed files.
 
 The launcher reads the installed mod; it does not copy files into the game or use the isolated engine harness. Rebuilds therefore need another copy before relaunching.
 
@@ -53,7 +53,7 @@ python3 tests/launch-local-coop.py join
 
 On Windows use `python` if that is how Python is installed. Both commands work on Linux as well. Use `--game "path/to/Steam/game/folder"` for custom installations. The launcher forces windowed mode using the game's native `STS2_DEV_WINDOWED` option.
 
-If either instance shows the game's mod-loading notice, accept it, enable Co-op Reward Viewer, close both instances, and relaunch the two commands. Each non-Steam player ID has separate account/profile settings, so both may need the initial notice. Confirm `[RewardViewer] Loaded Co-op Reward Viewer 0.5.2.` in each log.
+If either instance shows the game's mod-loading notice, accept it, enable Co-op Reward Viewer, close both instances, and relaunch the two commands. Each non-Steam player ID has separate account/profile settings, so both may need the initial notice. Confirm `[RewardViewer] Loaded Co-op Reward Viewer 0.6.0.` in each log.
 
 Both windows must ready up. For a useful comparison, unlock the test profiles as described below, pick different characters, and start a fresh test run. Complete the initial event and the first combat, controlling both players.
 
@@ -97,6 +97,8 @@ Verified against `UnlockConsoleCmd` and `RewardsSet.TryGenerateTutorialRewards` 
 10. With no local reward picker open, view a teammate's reward and click **Close**. This should reveal the underlying game without selecting or skipping the teammate's reward. If your local picker ends while you observe, the button should change from Back to Close.
 
 Native selection messages may arrive after your client's own reward generation/animations catch up; compare once both clients have reached the reward lifecycle.
+
+For a mixed-party test, also run a session where only one client has the mod, and a session with a modded host and an unmodded client. Reward viewing should work on the modded viewer; vanilla players keep vanilla UI. Votes and spectator cursors require modded participants and a modded host. The installed game may log ignored unknown mod-message IDs on vanilla peers.
 
 Then test rerolls, extra/nested rewards, disconnect/rejoin, and returning to the main menu. Only one fastmp host can listen on the fixed port at a time.
 

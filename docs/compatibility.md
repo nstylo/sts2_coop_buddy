@@ -4,16 +4,16 @@ The production artifact is a .NET 9 AnyCPU class library. It runs inside STS2's 
 
 ## Current evidence
 
-The runtime results below cover **mod v0.5.2 on public-beta v0.111.0**. Stable/main v0.107.1 is the primary release target and is not yet verified; see [branch compatibility](branches.md).
+The runtime results cover the **same public-built mod v0.6.0 DLL on public v0.107.1 and public-beta v0.111.0**. Both current branches are supported; see [branch compatibility](branches.md).
 
 | Platform/game runtime | Build and layout checks | Native engine checks | Live Steam co-op / visual review |
 | --- | --- | --- | --- |
-| macOS arm64 | Pass against installed v0.111.0 | 83 passed | Pending |
-| macOS x86_64 | Pass against installed v0.111.0 | 83 passed under Rosetta on Apple Silicon | Pending on physical Intel hardware |
+| macOS arm64 | Pass against public and beta | Public: 86 passed; beta: 87 passed | Pending |
+| macOS x86_64 | Pass against public and beta | Public: 86 passed; beta: 87 passed under Rosetta on Apple Silicon | Pending on physical Intel hardware |
 | Windows x86_64 | Windows layout, MSBuild properties, and staging fixtures pass | Pending on Windows with its installed game assemblies | Pending |
 | Linux x86_64 | Linux layout and MSBuild properties pass | Pending on Linux with its installed game assemblies | Pending |
 
-The Apple Silicon and Intel runs produced **byte-identical mod DLLs**, SHA-256 `41c3877f35f842dbf54d90811c3e050ed7a4416989ab374a42c59baebfae0fc0`. Both engine runs exercised that artifact. The harness uses real reward tasks, native card picker scenes and the native overlay stack inside a minimal UI shell. Its three-peer relay harness exercises native message discovery, the packet codec, dispatch and cursor synchronization; no ENet or Steam sockets are opened. Player rows are stand-ins, and inspection calls are captured to verify models/indices; full HUD appearance and interactive inspection still need the fastmp playtest. The same package is intended for Windows and Linux; their native game/runtime combinations have not been executed here. An IL-only PE `.dll` is the normal .NET format on all these OSes.
+All four engine runs exercised the **same DLL compiled against public**, SHA-256 `2b396feb6fb114ee99647bd7087339026f83b4c17ea1e5577288f872a3df2779`. `--mod-dir` pins that artifact in both the native mod-loader directory and the test assembly's load path while tests compile against each selected game. The harness uses real reward tasks, native card picker scenes and the native overlay stack inside a minimal UI shell. Its three-peer relay harness exercises native message discovery, the packet codec, dispatch and cursor synchronization; no ENet or Steam sockets are opened. Player rows are stand-ins, and inspection calls are captured to verify models/indices; full HUD appearance and interactive inspection still need the fastmp playtest. The same package is intended for Windows and Linux; their native game/runtime combinations have not been executed here. An IL-only PE `.dll` is the normal .NET format on all these OSes.
 
 ## Build configuration
 
@@ -76,10 +76,12 @@ python3 tests/run-runtime-tests.py --data-dir "$HOME/Library/Application Support
 
 The runner accepts a Steam game directory or macOS `.app`, and optional `--executable`, `--data-dir`, and `--pack` overrides when discovery is ambiguous. It reads the export's own CLR configuration/dependency graph and rebuilds the tests against that installation. It does not download or redistribute game files. Windows/Linux copying can require several GB of temporary space when filesystem cloning is unavailable. Logs remain in the printed staging directory; remove that directory after collecting results.
 
-A successful engine run must exit with code 0 and print `REWARD_VIEWER_TESTS_PASSED: 83`. Native game loading plus Harmony patching are part of those checks. A build alone or a passing fixture test is insufficient to mark native runtime verification complete.
+A successful engine run must exit with code 0 and print `REWARD_VIEWER_TESTS_PASSED: 86` on public or `87` on beta. Public skips the transport-level handshake check because that API does not exist there; both branches test vanilla message IDs and native host/client handling of unknown viewer packets. Native game loading plus Harmony patching are part of those checks. A build alone or a passing fixture test is insufficient to mark native runtime verification complete.
 
 ## Release validation still needed
 
 After the native Windows/Linux checks pass, test a Steam co-op session containing players on different OSes. Compare actual reward screens with the viewer for picks, skips, rerolls, enchantments, nested rewards, disconnect/rejoin, and save/load. Verify both host and client roles, window sizing, card inspection, and controller input. Keep all players on the same STS2 version.
 
 View metadata and advisory votes use two small native mod-message types; cursor positions continue to use the existing game protocol. Install the same mod version on the host and all participants for collaboration. Actual cross-OS co-op behavior remains dependent on STS2 and requires the session above to verify.
+
+Mixed-player checks use the actual native receivers with a vanilla message table and verify that built-in traffic still decodes after unknown viewer packets. They do not claim a complete connected vanilla/modded Steam playthrough. Other mods that introduce network messages with different type tables still need matching installations.

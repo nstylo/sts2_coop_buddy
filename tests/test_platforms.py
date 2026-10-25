@@ -145,6 +145,17 @@ class PlatformTests(unittest.TestCase):
         self.assertFalse((executable.parent / "mods/OtherMod").exists())
         pack.write_bytes(b"modified test pack")
         self.assertEqual(layout.pack.read_bytes(), b"original game pack")
+        pinned = self.directory / "public-built-mod"
+        pinned.mkdir()
+        for name in ("RewardViewer.dll", "RewardViewer.json"):
+            (pinned / name).write_bytes(b"pinned public artifact")
+        second_stage = self.directory / "beta-stage"
+        second_stage.mkdir()
+        with patch.object(runner, "ROOT", project), patch.object(runner.sys, "platform", "win32"):
+            pinned_executable, _ = runner.stage_install(layout, second_stage, pinned)
+        staged_data = second_stage / layout.root.name / layout.data_dir.relative_to(layout.root)
+        self.assertEqual((staged_data / "RewardViewer.dll").read_bytes(), b"pinned public artifact")
+        self.assertEqual((pinned_executable.parent / "mods/RewardViewer/RewardViewer.dll").read_bytes(), b"pinned public artifact")
 
     def test_filesystem_clone_failure_falls_back_to_private_copy(self):
         source = self.directory / "source.pck"

@@ -34,10 +34,10 @@ internal static class CollaborationTests
         using var clientInput = new PeerInputSynchronizer(clientNet);
         using var thirdInput = new PeerInputSynchronizer(thirdNet);
 
-        check(MessageTypes.TypeToId<RewardViewMessage>() != MessageTypes.TypeToId<RewardVoteMessage>(),
+        check(MessageTypes.TypeToId<ZZZRewardViewerViewMessage>() != MessageTypes.TypeToId<ZZZRewardViewerVoteMessage>(),
             "native mod message discovery assigns distinct packet IDs");
-        check(new RewardVoteMessage().Mode == NetTransferMode.Reliable && new RewardViewMessage().ShouldBroadcast &&
-            !new RewardVoteMessage().ShouldBuffer, "collaboration packets use reliable native host relay without stale buffering");
+        check(new ZZZRewardViewerVoteMessage().Mode == NetTransferMode.Reliable && new ZZZRewardViewerViewMessage().ShouldBroadcast &&
+            !new ZZZRewardViewerVoteMessage().ShouldBuffer, "collaboration packets use reliable native host relay without stale buffering");
 
         (OpenReward Entry, TaskCompletionSource<bool> Pending) Open(Player player)
         {
@@ -95,10 +95,10 @@ internal static class CollaborationTests
         check(host.Votes(key).Single() == (2000UL, 1), "clicking the same recommendation again clears it on every peer");
         host.Vote(own, 0);
         check(host.Votes(key).Count() == 1, "reward owner cannot cast a spectator vote on their own picker");
-        hub.Inject(999, new RewardVoteMessage { Reward = key, CardIndex = 0 });
-        clientNet.SendMessage(new RewardVoteMessage { Reward = key, CardIndex = 20 });
-        clientNet.SendMessage(new RewardVoteMessage { Reward = key, CardIndex = -2 });
-        clientNet.SendMessage(new RewardVoteMessage { Reward = key with { ChoiceId = uint.MaxValue }, CardIndex = 0 });
+        hub.Inject(999, new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = 0 });
+        clientNet.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = 20 });
+        clientNet.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = -2 });
+        clientNet.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key with { ChoiceId = uint.MaxValue }, CardIndex = 0 });
         check(host.Votes(key).Single() == (2000UL, 1), "unknown senders, invalid indices and unrelated choices cannot create votes");
         check(players.Select(player => player.Deck.Cards.Count).SequenceEqual(deckCounts) && !ownTask.Task.IsCompleted,
             "recommendations neither change decks nor resolve the owner's pending choice");
@@ -126,7 +126,7 @@ internal static class CollaborationTests
         var rerolledKey = RewardKey.For(own)!.Value;
         check(rerolledKey != key && !host.Votes(key).Any() && !host.Votes(rerolledKey).Any(),
             "rerolls invalidate old card votes even when the same reward object remains open");
-        clientNet.SendMessage(new RewardVoteMessage { Reward = key, CardIndex = 0 });
+        clientNet.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = 0 });
         check(!host.Votes(rerolledKey).Any(), "delayed votes for previous options cannot attach to rerolled cards");
         client.Vote(own, 1);
         ownTask.SetResult(true);
@@ -137,12 +137,11 @@ internal static class CollaborationTests
             "closing a reward clears recommendations and its shared cursor context");
 
         rejoined.Vote(remote, 1);
-        var disconnected = RunManager.Instance.RunLobby!.Players.Single(player => player.id == 2000);
-        RunManager.Instance.RunLobby.Players.Remove(disconnected);
+        var reconnect = MixedPeerTests.Disconnect(2000);
         host.Tick(remote);
         check(host.Votes(RewardKey.For(remote)!.Value).All(vote => vote.PlayerId != 2000),
             "disconnect removes that player's recommendations");
-        RunManager.Instance.RunLobby.Players.Add(disconnected);
+        reconnect();
         remoteTask.SetCanceled();
         host.Tick(null);
         client.Tick(null);
@@ -194,7 +193,7 @@ public class NativeMessagePeer : DispatchProxy
 {
     internal ulong Id;
     internal NativeMessageHub Hub = null!;
-    internal readonly NetMessageBus Bus = new(new PacketReader(), new PacketWriter());
+    internal readonly NetMessageBus Bus = MixedPeerTests.CreateBus();
     private readonly NetSingleplayerGameService _fallback = new();
     protected override object? Invoke(MethodInfo? method, object?[]? args)
     {

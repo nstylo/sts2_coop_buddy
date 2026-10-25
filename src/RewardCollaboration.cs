@@ -35,7 +35,9 @@ internal readonly record struct RewardKey(ulong OwnerId, uint ChoiceId, ulong Op
 
 // STS2 discovers INetMessage implementations in loaded mods. These use its native
 // serialization, reliable delivery, host relay and sender identity; no extra transport.
-public sealed class RewardViewMessage : INetMessage
+// Public v0.107.1 sorts by class name. Keep these after all vanilla messages so
+// installing this optional UI mod does not change vanilla players' message IDs.
+public sealed class ZZZRewardViewerViewMessage : INetMessage
 {
     internal RewardKey? Reward { get; set; }
     public bool ShouldBroadcast => true;
@@ -50,7 +52,7 @@ public sealed class RewardViewMessage : INetMessage
     public void Deserialize(PacketReader reader) => Reward = reader.ReadBool() ? RewardKey.Read(reader) : null;
 }
 
-public sealed class RewardVoteMessage : INetMessage
+public sealed class ZZZRewardViewerVoteMessage : INetMessage
 {
     internal RewardKey Reward { get; set; }
     internal int CardIndex { get; set; }
@@ -76,8 +78,8 @@ internal sealed class RewardCollaboration : IDisposable
     internal RewardCollaboration(INetGameService net)
     {
         _net = net;
-        net.RegisterMessageHandler<RewardViewMessage>(ReceiveView);
-        net.RegisterMessageHandler<RewardVoteMessage>(ReceiveVote);
+        net.RegisterMessageHandler<ZZZRewardViewerViewMessage>(ReceiveView);
+        net.RegisterMessageHandler<ZZZRewardViewerVoteMessage>(ReceiveVote);
         net.Disconnected += OnDisconnected;
     }
 
@@ -91,10 +93,10 @@ internal sealed class RewardCollaboration : IDisposable
         ulong now = Time.GetTicksMsec();
         if (_net.IsConnected && (!_published || changed || now >= _nextHeartbeat))
         {
-            if (!_published || changed || key != null) _net.SendMessage(new RewardViewMessage { Reward = key });
+            if (!_published || changed || key != null) _net.SendMessage(new ZZZRewardViewerViewMessage { Reward = key });
             // Small periodic snapshots let a newly connected teammate recover our view/votes.
             foreach (var vote in _votes.Where(pair => pair.Key.Voter == _net.NetId))
-                _net.SendMessage(new RewardVoteMessage { Reward = vote.Key.Reward, CardIndex = vote.Value });
+                _net.SendMessage(new ZZZRewardViewerVoteMessage { Reward = vote.Key.Reward, CardIndex = vote.Value });
             _published = true;
             _nextHeartbeat = now + 1000;
         }
@@ -107,7 +109,7 @@ internal sealed class RewardCollaboration : IDisposable
         if (RewardKey.For(reward) is not { } key || !CanVote(key, cardIndex, _net.NetId)) return;
         int value = _votes.TryGetValue((key, _net.NetId), out int previous) && previous == cardIndex ? -1 : cardIndex;
         ApplyVote(key, value, _net.NetId);
-        if (_net.IsConnected) _net.SendMessage(new RewardVoteMessage { Reward = key, CardIndex = value });
+        if (_net.IsConnected) _net.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = value });
     }
 
     internal IEnumerable<(ulong PlayerId, int CardIndex)> Votes(RewardKey reward) =>
@@ -115,7 +117,7 @@ internal sealed class RewardCollaboration : IDisposable
 
     private void RefreshActive()
     {
-        var connected = RunManager.Instance.RunLobby?.PlayerIds.ToHashSet() ?? [];
+        var connected = NativeCompatibility.ConnectedPlayers.ToHashSet();
         _active = RewardTracker.GetOpenRewards().Where(entry => connected.Contains(entry.Player.NetId) &&
                 !entry.Player.Creature.IsDead && entry.ChoiceId.HasValue)
             .ToDictionary(entry => RewardKey.For(entry)!.Value);
@@ -125,7 +127,7 @@ internal sealed class RewardCollaboration : IDisposable
     }
 
     private bool CanVote(RewardKey key, int index, ulong sender) => sender != key.OwnerId &&
-        RunManager.Instance.RunLobby?.PlayerIds.Contains(sender) == true &&
+        NativeCompatibility.ConnectedPlayers.Contains(sender) &&
         _active.TryGetValue(key, out var reward) && index >= -1 && index < reward.Reward.Cards.Count();
 
     private void ApplyVote(RewardKey key, int index, ulong sender)
@@ -134,14 +136,14 @@ internal sealed class RewardCollaboration : IDisposable
         else _votes[(key, sender)] = index;
     }
 
-    private void ReceiveView(RewardViewMessage message, ulong sender) => ModEntry.Guard(() =>
+    private void ReceiveView(ZZZRewardViewerViewMessage message, ulong sender) => ModEntry.Guard(() =>
     {
-        if (sender == _net.NetId || RunManager.Instance.RunLobby?.PlayerIds.Contains(sender) != true) return;
+        if (sender == _net.NetId || !NativeCompatibility.ConnectedPlayers.Contains(sender)) return;
         _views[sender] = message.Reward;
         if (Current == this) RewardCursorPatch.Refresh();
     });
 
-    private void ReceiveVote(RewardVoteMessage message, ulong sender) => ModEntry.Guard(() =>
+    private void ReceiveVote(ZZZRewardViewerVoteMessage message, ulong sender) => ModEntry.Guard(() =>
     {
         RefreshActive();
         if (CanVote(message.Reward, message.CardIndex, sender)) ApplyVote(message.Reward, message.CardIndex, sender);
@@ -177,8 +179,8 @@ internal sealed class RewardCollaboration : IDisposable
 
     public void Dispose()
     {
-        _net.UnregisterMessageHandler<RewardViewMessage>(ReceiveView);
-        _net.UnregisterMessageHandler<RewardVoteMessage>(ReceiveVote);
+        _net.UnregisterMessageHandler<ZZZRewardViewerViewMessage>(ReceiveView);
+        _net.UnregisterMessageHandler<ZZZRewardViewerVoteMessage>(ReceiveVote);
         _net.Disconnected -= OnDisconnected;
         Reset();
         if (Current == this) Current = null;

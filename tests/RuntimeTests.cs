@@ -84,6 +84,7 @@ internal static class RuntimeTests
             var buffer = new RunLocationTargetedMessageBuffer(net);
             using var choices = new PlayerChoiceSynchronizer(net, state);
             using var sync = new RewardsSetSynchronizer(buffer, net, state, 1);
+            MixedPeerTests.Run(Check);
             CardReward Make(Player owner, params CardModel[] cards) => new(cards,
                 CardCreationSource.Encounter, owner, CardCreationOptions.ForRoom(owner, RoomType.Monster), choices);
             Task<bool> Start(CardReward reward) => (Task<bool>)AccessTools.Method(typeof(CardReward), "OnSelect").Invoke(reward, null)!;
@@ -317,13 +318,13 @@ internal static class RuntimeTests
                 ((ShaderMaterial)holder.CardNode.CardHighlight.Material).GetShaderParameter("width").AsSingle() > 0,
                 "a local recommendation shows the voter's native portrait alongside the native card glow");
             AccessTools.Method(typeof(RewardCollaboration), "ReceiveVote").Invoke(RewardCollaboration.Current,
-                [new RewardVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = 0 }, 2000UL]);
+                [new ZZZRewardViewerVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = 0 }, 2000UL]);
             await Delay(tree);
             var voteIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote2000");
             Check(voteIcon.Texture == thirdPlayer.Character.IconTexture && voteIcon.CustomMinimumSize == new Vector2(48, 48),
                 "teammate recommendations use larger native portraits");
             AccessTools.Method(typeof(RewardCollaboration), "ReceiveVote").Invoke(RewardCollaboration.Current,
-                [new RewardVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = 0 }, 3000UL]);
+                [new ZZZRewardViewerVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = 0 }, 3000UL]);
             await Delay(tree);
             voteIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote2000");
             var twinIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote3000");
@@ -347,7 +348,7 @@ internal static class RuntimeTests
             Check(firstName != secondName && secondName.Contains(PlatformUtil.GetPlayerName(RunManager.Instance.NetService.Platform, 3000)),
                 "identical character portraits show their individual voters' names");
             AccessTools.Method(typeof(RewardCollaboration), "ReceiveVote").Invoke(RewardCollaboration.Current,
-                [new RewardVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = -1 }, 3000UL]);
+                [new ZZZRewardViewerVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = -1 }, 3000UL]);
             await Delay(tree);
             Check(hoverTips.GetChildCount() == 0, "removing a vote also removes its native name popup");
             voteIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote2000");
@@ -408,7 +409,7 @@ internal static class RuntimeTests
                 originalLocalHolders[^1]!.Position.IsEqualApprox(new Vector2(350, 0)),
                 "repeated entrances finish at the original layout without accumulating position drift");
             AccessTools.Method(typeof(RewardCollaboration), "ReceiveVote").Invoke(RewardCollaboration.Current,
-                [new RewardVoteMessage { Reward = RewardKey.For(own)!.Value, CardIndex = 0 }, 1000UL]);
+                [new ZZZRewardViewerVoteMessage { Reward = RewardKey.For(own)!.Value, CardIndex = 0 }, 1000UL]);
             await Delay(tree);
             Check(ownScreen.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote1000").Texture == remote.Character.IconTexture && !ownChoice.IsCompleted,
                 "reward owner sees the teammate's native recommendation icon while retaining selection control");
@@ -430,13 +431,12 @@ internal static class RuntimeTests
                 "remote close clears its icon and automatically restores the local picker");
             remoteTask = Start(Make(remote, bash));
             remoteButton.EmitSignal(BaseButton.SignalName.Pressed);
-            var remoteLobby = RunManager.Instance.RunLobby!.Players.Single(player => player.id == remote.NetId);
-            RunManager.Instance.RunLobby!.Players.RemoveAll(player => player.id == remote.NetId);
+            var reconnect = MixedPeerTests.Disconnect(remote.NetId);
             await Delay(tree);
             Check(!remoteButton.Visible && stack.Peek() == ownScreen, "disconnect removes both the icon and watched preview");
             Cancel(RewardTracker.GetOpenRewards().Single(entry => entry.Player == remote));
             await remoteTask;
-            RunManager.Instance.RunLobby.Players.Add(remoteLobby);
+            reconnect();
             await Task.Delay(400);
             AccessTools.Method(typeof(NCardRewardSelectionScreen), "SelectCard").Invoke(ownScreen,
                 [NativeRewardScreen.HoldersInOfferOrder(ownScreen)[0]]);

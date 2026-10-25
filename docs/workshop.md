@@ -19,7 +19,7 @@ workshop/
 
 Only `content/` is uploaded as installable mod content. The uploader sends the thumbnail and listing separately. `content/` is generated and ignored by Git. Keep `mod_id.txt` backed up: it identifies the existing Workshop item, and is deliberately outside `dist/` so a clean rebuild will not delete it.
 
-`workshop.json` currently labels the item **Co-op Reward Viewer (Beta)**, restricts both branch bounds to `public-beta`, declares no dependencies, and starts with `private` visibility. This reflects the package's verified v0.111.0 target. Stable/main support still needs its own port and validation. The [official workspace documentation](https://github.com/megacrit/sts2-mod-uploader/blob/main/template/README.md) notes that Steam's branch-range settings can behave inconsistently; check those settings on the Workshop page after uploading.
+`workshop.json` labels the item **Co-op Reward Viewer**, covers `public` through `public-beta`, declares no dependencies, and starts with `private` visibility. The current shared DLL is verified against public v0.107.1 and beta v0.111.0. Steam supports [branch-specific item versioning](https://partner.steamgames.com/doc/features/workshop/itemversioning): one listing can serve compatible versions to both branches. The [official workspace documentation](https://github.com/megacrit/sts2-mod-uploader/blob/main/template/README.md) notes that branch-range settings can behave inconsistently; verify them on the Workshop page after uploading.
 
 ## Prepare and review
 
@@ -35,15 +35,27 @@ On Windows, use `python` if that is how Python is installed. `prepare` builds Re
 
 Review `workshop/workshop.json` and `workshop/image.png`. The dry run validates the content, version, thumbnail, visibility and saved item ID, then prints the uploader command. It does not build, download, initialize Steam or upload anything. The helper rejects extra files in `content/`, such as game assemblies, test output or logs.
 
+## Check both branches before a release
+
+Supporting the latest public and beta is the release policy. After updating the two local game installations, run:
+
+```sh
+python3 tools/workshop.py check --public /path/to/public/game --beta /path/to/beta/game
+```
+
+This rebuilds against public, pins the resulting DLL, and runs the native engine tests on both games using that exact artifact. It restores the public-built package even if a later test fails, and stages it after both pass. On the current Mac, the two preserved installations are `.local/baselines/public-v0.107.1/SlayTheSpire2.app` and `.local/baselines/public-beta-v0.111.0/SlayTheSpire2.app`. Update these baselines when game releases change. Intel/Rosetta, Windows and Linux checks can be run separately as described in the compatibility guide.
+
+After a successful check, use `upload --no-build` to publish the checked package without rebuilding against a different active Steam branch. If future API differences require separate DLLs, retain a working public item revision and upload separate public-only and beta-only revisions to the same Workshop ID; do not drop public support to ship a beta update.
+
 ## Create the item
 
 Start Steam and log in to the account that owns Slay the Spire 2 and should own this Workshop item. Then run:
 
 ```sh
-python3 tools/workshop.py upload
+python3 tools/workshop.py upload --no-build
 ```
 
-This is the step that submits to Steam. It rebuilds and stages the current mod, then invokes the official uploader. With the supplied config it creates a **private** item, writes its ID to `workshop/mod_id.txt` after success, and opens its Steam page. Complete Steam's Workshop agreement if prompted. Review the item before changing `visibility` in `workshop.json` to `public`, `unlisted` or `friends_only` and uploading again. Keep the local visibility setting in sync with changes made on the website, since later uploads apply it again.
+This is the step that submits to Steam. With `--no-build`, it stages the already checked package and invokes the official uploader. Without that option, it rebuilds against the active installation first. With the supplied config it creates a **private** item, writes its ID to `workshop/mod_id.txt` after success, and opens its Steam page. Complete Steam's Workshop agreement if prompted. Review the item before changing `visibility` in `workshop.json` to `public`, `unlisted` or `friends_only` and uploading again. Keep the local visibility setting in sync with changes made on the website, since later uploads apply it again.
 
 ## Update the same item
 
