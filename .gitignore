@@ -1,0 +1,32 @@
+# .NET build output, including the test projects
+[Bb]in/
+[Oo]bj/
+/dist/
+
+# Machine-specific game paths; keep local.props.example in source control
+/local.props
+
+# Local game copies, test logs/captures, and downloaded Workshop tooling
+/.local/
+/.tools/
+
+# Generated Workshop upload content and the local published-item ID
+/workshop/content/
+/workshop/mod_id.txt
+
+# Python helper caches and compiled bytecode
+__pycache__/
+*.py[cod]
+
+# Per-user Visual Studio state
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# macOS and Windows filesystem metadata
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini

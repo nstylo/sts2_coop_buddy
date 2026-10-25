@@ -1,0 +1,32 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)local.props" Condition="Exists('$(MSBuildThisFileDirectory)local.props')" />
+  <PropertyGroup>
+    <!-- Sts2Platform selects the installed game's layout, not the output DLL's platform. -->
+    <Sts2Platform Condition="'$(Sts2Platform)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">macos</Sts2Platform>
+    <Sts2Platform Condition="'$(Sts2Platform)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linuxbsd</Sts2Platform>
+    <Sts2Platform Condition="'$(Sts2Platform)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">windows</Sts2Platform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Sts2Platform)' == 'windows' and $([MSBuild]::IsOSPlatform('Windows')) and '$(Sts2Dir)' == '' and '$(SteamLibraryPath)' == '' and '$(Sts2DataDir)' == ''">
+    <_RegistryGameDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 2868840', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</_RegistryGameDir>
+    <Sts2Dir Condition="Exists('$(_RegistryGameDir)/data_sts2_windows_x86_64/sts2.dll')">$(_RegistryGameDir)</Sts2Dir>
+    <_RegistrySteamDir>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\Software\Valve\Steam', 'SteamPath', null, RegistryView.Registry64, RegistryView.Registry32))</_RegistrySteamDir>
+    <SteamLibraryPath Condition="'$(Sts2Dir)' == '' and Exists('$(_RegistrySteamDir)/steamapps/common/Slay the Spire 2')">$(_RegistrySteamDir)/steamapps</SteamLibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SteamLibraryPath)' == '' and '$(Sts2Dir)' == '' and '$(Sts2DataDir)' == ''">
+    <SteamLibraryPath Condition="'$(Sts2Platform)' == 'macos'">$(HOME)/Library/Application Support/Steam/steamapps</SteamLibraryPath>
+    <SteamLibraryPath Condition="'$(Sts2Platform)' == 'windows'">$(MSBuildProgramFiles32)/Steam/steamapps</SteamLibraryPath>
+    <SteamLibraryPath Condition="'$(Sts2Platform)' == 'linuxbsd' and Exists('$(HOME)/.local/share/Steam/steamapps/common/Slay the Spire 2')">$(HOME)/.local/share/Steam/steamapps</SteamLibraryPath>
+    <SteamLibraryPath Condition="'$(Sts2Platform)' == 'linuxbsd' and '$(SteamLibraryPath)' == '' and Exists('$(HOME)/.steam/steam/steamapps/common/Slay the Spire 2')">$(HOME)/.steam/steam/steamapps</SteamLibraryPath>
+    <SteamLibraryPath Condition="'$(Sts2Platform)' == 'linuxbsd' and '$(SteamLibraryPath)' == '' and Exists('$(HOME)/.steam/root/steamapps/common/Slay the Spire 2')">$(HOME)/.steam/root/steamapps</SteamLibraryPath>
+    <SteamLibraryPath Condition="'$(Sts2Platform)' == 'linuxbsd' and '$(SteamLibraryPath)' == '' and Exists('$(HOME)/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/Slay the Spire 2')">$(HOME)/.var/app/com.valvesoftware.Steam/data/Steam/steamapps</SteamLibraryPath>
+    <SteamLibraryPath Condition="'$(Sts2Platform)' == 'linuxbsd' and '$(SteamLibraryPath)' == ''">$(HOME)/.local/share/Steam/steamapps</SteamLibraryPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Sts2Dir Condition="'$(Sts2Dir)' == '' and '$(SteamLibraryPath)' != ''">$(SteamLibraryPath)/common/Slay the Spire 2</Sts2Dir>
+    <!-- Both Mac assembly sets are managed references; either can build the same AnyCPU mod. -->
+    <Sts2Architecture Condition="'$(Sts2Architecture)' == '' and '$(Sts2Platform)' == 'macos' and Exists('$(Sts2Dir)/SlayTheSpire2.app/Contents/Resources/data_sts2_macos_arm64/sts2.dll')">arm64</Sts2Architecture>
+    <Sts2Architecture Condition="'$(Sts2Architecture)' == ''">x86_64</Sts2Architecture>
+    <Sts2DataDir Condition="'$(Sts2DataDir)' == '' and '$(Sts2Platform)' == 'macos'">$(Sts2Dir)/SlayTheSpire2.app/Contents/Resources/data_sts2_macos_$(Sts2Architecture)</Sts2DataDir>
+    <Sts2DataDir Condition="'$(Sts2DataDir)' == '' and '$(Sts2Platform)' != 'macos'">$(Sts2Dir)/data_sts2_$(Sts2Platform)_$(Sts2Architecture)</Sts2DataDir>
+  </PropertyGroup>
+</Project>

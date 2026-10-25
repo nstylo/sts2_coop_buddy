@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!-- Copy to local.props. Set the Steam game folder on any OS. -->
+    <Sts2Dir>/path/to/steamapps/common/Slay the Spire 2</Sts2Dir>
+    <!-- Or set the assembly directory directly; this takes precedence over discovery.
+    <Sts2DataDir>C:/SteamLibrary/steamapps/common/Slay the Spire 2/data_sts2_windows_x86_64</Sts2DataDir>
+    <Sts2DataDir>/home/user/.local/share/Steam/steamapps/common/Slay the Spire 2/data_sts2_linuxbsd_x86_64</Sts2DataDir>
+    <Sts2DataDir>/Users/user/Library/Application Support/Steam/steamapps/common/Slay the Spire 2/SlayTheSpire2.app/Contents/Resources/data_sts2_macos_arm64</Sts2DataDir>
+    -->
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg"><stop stop-color="#283e43"/><stop offset="1" stop-color="#10191e"/></radialGradient>
+    <linearGradient id="card" x2="0" y2="1"><stop stop-color="#485c60"/><stop offset="1" stop-color="#233438"/></linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g fill="none" stroke="#bba06a" stroke-width="3" opacity=".4"><path d="M48 156V48h108M868 48h108v108M48 868v108h108M868 976h108V868"/></g>
+  <text x="512" y="157" text-anchor="middle" fill="#ccb681" font-family="sans-serif" font-weight="bold" font-size="27" letter-spacing="8">SLAY THE SPIRE 2 · MOD</text>
+  <g fill="url(#card)" stroke="#8a9c99" stroke-width="6">
+    <rect x="179" y="255" width="202" height="305" rx="13" transform="rotate(-12 280 410)"/>
+    <rect x="643" y="255" width="202" height="305" rx="13" transform="rotate(12 744 410)"/>
+    <rect x="403" y="229" width="218" height="330" rx="13"/>
+  </g>
+  <g fill="none" stroke="#e3cc88" stroke-width="7" stroke-linecap="square">
+    <path d="M385 268v-56h56m142 0h56v56M385 521v56h56m142 0h56v-56"/>
+    <path d="M453 371q59-70 118 0-59 70-118 0z"/>
+    <circle cx="512" cy="371" r="19"/>
+  </g>
+  <g fill="#e3cc88"><circle cx="512" cy="512" r="12"/><circle cx="549" cy="512" r="12"/><circle cx="586" cy="512" r="12"/></g>
+  <text x="512" y="713" text-anchor="middle" fill="#eee9d8" font-family="sans-serif" font-weight="bold" font-size="82" letter-spacing="5">CO-OP</text>
+  <text x="512" y="802" text-anchor="middle" fill="#eee9d8" font-family="sans-serif" font-weight="bold" font-size="63" letter-spacing="2">REWARD VIEWER</text>
+  <text x="512" y="880" text-anchor="middle" fill="#b7c6c7" font-family="sans-serif" font-size="28" letter-spacing="2">VIEW TOGETHER · VOTE TOGETHER</text>
+</svg>
