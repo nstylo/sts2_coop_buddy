@@ -17,7 +17,7 @@ using MegaCrit.Sts2.Core.Rewards;
 using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Runs;
 
-namespace RewardViewer.Tests;
+namespace CoopBuddy.Tests;
 
 internal static class CollaborationTests
 {
@@ -34,10 +34,10 @@ internal static class CollaborationTests
         using var clientInput = new PeerInputSynchronizer(clientNet);
         using var thirdInput = new PeerInputSynchronizer(thirdNet);
 
-        check(MessageTypes.TypeToId<ZZZRewardViewerViewMessage>() != MessageTypes.TypeToId<ZZZRewardViewerVoteMessage>(),
+        check(MessageTypes.TypeToId<ZZZCoopBuddyViewMessage>() != MessageTypes.TypeToId<ZZZCoopBuddyVoteMessage>(),
             "native mod message discovery assigns distinct packet IDs");
-        check(new ZZZRewardViewerVoteMessage().Mode == NetTransferMode.Reliable && new ZZZRewardViewerViewMessage().ShouldBroadcast &&
-            !new ZZZRewardViewerVoteMessage().ShouldBuffer, "collaboration packets use reliable native host relay without stale buffering");
+        check(new ZZZCoopBuddyVoteMessage().Mode == NetTransferMode.Reliable && new ZZZCoopBuddyViewMessage().ShouldBroadcast &&
+            !new ZZZCoopBuddyVoteMessage().ShouldBuffer, "collaboration packets use reliable native host relay without stale buffering");
 
         (OpenReward Entry, TaskCompletionSource<bool> Pending) Open(Player player)
         {
@@ -95,10 +95,10 @@ internal static class CollaborationTests
         check(host.Votes(key).Single() == (2000UL, 1), "clicking the same recommendation again clears it on every peer");
         host.Vote(own, 0);
         check(host.Votes(key).Count() == 1, "reward owner cannot cast a spectator vote on their own picker");
-        hub.Inject(999, new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = 0 });
-        clientNet.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = 20 });
-        clientNet.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = -2 });
-        clientNet.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key with { ChoiceId = uint.MaxValue }, CardIndex = 0 });
+        hub.Inject(999, new ZZZCoopBuddyVoteMessage { Reward = key, CardIndex = 0 });
+        clientNet.SendMessage(new ZZZCoopBuddyVoteMessage { Reward = key, CardIndex = 20 });
+        clientNet.SendMessage(new ZZZCoopBuddyVoteMessage { Reward = key, CardIndex = -2 });
+        clientNet.SendMessage(new ZZZCoopBuddyVoteMessage { Reward = key with { ChoiceId = uint.MaxValue }, CardIndex = 0 });
         check(host.Votes(key).Single() == (2000UL, 1), "unknown senders, invalid indices and unrelated choices cannot create votes");
         check(players.Select(player => player.Deck.Cards.Count).SequenceEqual(deckCounts) && !ownTask.Task.IsCompleted,
             "recommendations neither change decks nor resolve the owner's pending choice");
@@ -126,7 +126,7 @@ internal static class CollaborationTests
         var rerolledKey = RewardKey.For(own)!.Value;
         check(rerolledKey != key && !host.Votes(key).Any() && !host.Votes(rerolledKey).Any(),
             "rerolls invalidate old card votes even when the same reward object remains open");
-        clientNet.SendMessage(new ZZZRewardViewerVoteMessage { Reward = key, CardIndex = 0 });
+        clientNet.SendMessage(new ZZZCoopBuddyVoteMessage { Reward = key, CardIndex = 0 });
         check(!host.Votes(rerolledKey).Any(), "delayed votes for previous options cannot attach to rerolled cards");
         client.Vote(own, 1);
         ownTask.SetResult(true);

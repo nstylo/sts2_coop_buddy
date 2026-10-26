@@ -11,7 +11,7 @@ using MegaCrit.Sts2.Core.Saves;
 using MegaCrit.Sts2.Core.Saves.Runs;
 using MegaCrit.Sts2.Core.Nodes.Screens.CardSelection;
 
-namespace RewardViewer;
+namespace CoopBuddy;
 
 internal sealed class OpenReward(CardReward reward, PlayerChoiceSynchronizer synchronizer)
 {

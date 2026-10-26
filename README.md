@@ -1,6 +1,6 @@
-# Co-op Reward Viewer
+# Co-op Buddy
 
-A small Slay the Spire 2 mod for switching between players' currently open card rewards. Uses the vanilla player-status card icon and full native reward screen. Teammates can share cursors and recommend cards with native player portraits; only the owner can take a reward.
+A co-op companion for Slay the Spire 2. Its reward viewer lets you switch between players' currently open card rewards using the vanilla player-status card icon and full native reward screen. Teammates can share cursors and recommend cards with native player portraits; only the owner can take a reward.
 
 Version **0.6.0** supports the latest public **v0.107.1** and public-beta **v0.111.0** with one **.NET 9** DLL, built against public and tested unchanged on both branches. The manifest minimum is `0.107.1`. Supporting both current branches is the release policy; see [branch compatibility](docs/branches.md).
 
@@ -24,7 +24,7 @@ For a different Steam library, copy `local.props.example` to `local.props` and s
 dotnet build -c Release -p:Sts2DataDir="/path/to/directory/containing/sts2.dll"
 ```
 
-The two distributable files are `dist/RewardViewer/RewardViewer.dll` and `dist/RewardViewer/RewardViewer.json`. A ZIP is also generated at `dist/RewardViewer-0.6.0.zip`. Do not distribute the game's assemblies or the runtime test output.
+The two distributable files are `dist/CoopBuddy/CoopBuddy.dll` and `dist/CoopBuddy/CoopBuddy.json`. A ZIP is also generated at `dist/CoopBuddy-0.6.0.zip`. Do not distribute the game's assemblies or the runtime test output.
 
 ## Steam Workshop
 
@@ -40,13 +40,15 @@ To submit it using your logged-in Steam account, run `python3 tools/workshop.py 
 
 ## Install
 
-Use the same `RewardViewer.dll` and `RewardViewer.json` on every platform, with the exact spelling and capitalization shown below. The game supplies the runtime; players do not need to install the SDK to use the mod.
+Upgrading from **Co-op Reward Viewer**: remove the old `RewardViewer` mod folder before installing Co-op Buddy. The mod ID and filenames are now `CoopBuddy`; enable Co-op Buddy in the game's Mods menu and restart if prompted. Everyone using shared cursors or recommendations should upgrade together.
+
+Use the same `CoopBuddy.dll` and `CoopBuddy.json` on every platform, with the exact spelling and capitalization shown below. The game supplies the runtime; players do not need to install the SDK to use the mod.
 
 | Platform | Folder for both files, relative to Steam's game directory |
 | --- | --- |
-| Windows | `mods/RewardViewer/` beside the game executable |
-| Linux | `mods/RewardViewer/` beside the game executable |
-| macOS (Apple Silicon and Intel) | `SlayTheSpire2.app/Contents/MacOS/mods/RewardViewer/` |
+| Windows | `mods/CoopBuddy/` beside the game executable |
+| Linux | `mods/CoopBuddy/` beside the game executable |
+| macOS (Apple Silicon and Intel) | `SlayTheSpire2.app/Contents/MacOS/mods/CoopBuddy/` |
 
 Steam's **Manage → Browse local files** opens the game directory, including for custom Steam libraries. Quit the game before copying files.
 
@@ -54,8 +56,8 @@ Steam's **Manage → Browse local files** opens the game directory, including fo
 
 ```powershell
 $game = "C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2"
-New-Item -ItemType Directory -Force -Path "$game\mods\RewardViewer" | Out-Null
-Copy-Item .\dist\RewardViewer\RewardViewer.dll,.\dist\RewardViewer\RewardViewer.json -Destination "$game\mods\RewardViewer\"
+New-Item -ItemType Directory -Force -Path "$game\mods\CoopBuddy" | Out-Null
+Copy-Item .\dist\CoopBuddy\CoopBuddy.dll,.\dist\CoopBuddy\CoopBuddy.json -Destination "$game\mods\CoopBuddy\"
 ```
 
 Change `$game` to the folder opened by Steam if it is installed elsewhere.
@@ -64,8 +66,8 @@ Change `$game` to the folder opened by Steam if it is installed elsewhere.
 
 ```sh
 game="$HOME/.local/share/Steam/steamapps/common/Slay the Spire 2"
-mkdir -p "$game/mods/RewardViewer"
-cp dist/RewardViewer/RewardViewer.dll dist/RewardViewer/RewardViewer.json "$game/mods/RewardViewer/"
+mkdir -p "$game/mods/CoopBuddy"
+cp dist/CoopBuddy/CoopBuddy.dll dist/CoopBuddy/CoopBuddy.json "$game/mods/CoopBuddy/"
 ```
 
 For Flatpak or a custom library, replace `game` with the folder opened by Steam. Preserve filename case on Linux.
@@ -76,11 +78,11 @@ Quit STS2. The installed game's loader searches for `mods` **beside its executab
 
 ```sh
 mods="$HOME/Library/Application Support/Steam/steamapps/common/Slay the Spire 2/SlayTheSpire2.app/Contents/MacOS/mods"
-mkdir -p "$mods/RewardViewer"
-cp dist/RewardViewer/RewardViewer.dll dist/RewardViewer/RewardViewer.json "$mods/RewardViewer/"
+mkdir -p "$mods/CoopBuddy"
+cp dist/CoopBuddy/CoopBuddy.dll dist/CoopBuddy/CoopBuddy.json "$mods/CoopBuddy/"
 ```
 
-Launch through Steam, accept the game's mod-loading notice if prompted, enable Co-op Reward Viewer, and restart if requested. Confirm `[RewardViewer] Loaded Co-op Reward Viewer 0.6.0.` in the game log. Steam updates may remove files inside the app bundle; reinstall the two files if needed. To uninstall, remove only the `RewardViewer` folder while the game is closed.
+Launch through Steam, accept the game's mod-loading notice if prompted, enable Co-op Buddy, and restart if requested. Confirm `[CoopBuddy] Loaded Co-op Buddy 0.6.0.` in the game log. Steam updates may remove files inside the app bundle; reinstall the two files if needed. To uninstall, remove only the `CoopBuddy` folder while the game is closed.
 
 ## Use
 

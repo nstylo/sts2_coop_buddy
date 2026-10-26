@@ -28,9 +28,9 @@ dotnet build -c Release --disable-build-servers
 Install the DLL and manifest using the [platform instructions](../README.md#install). On the current Mac:
 
 ```sh
-mods="$HOME/Library/Application Support/Steam/steamapps/common/Slay the Spire 2/SlayTheSpire2.app/Contents/MacOS/mods/RewardViewer"
+mods="$HOME/Library/Application Support/Steam/steamapps/common/Slay the Spire 2/SlayTheSpire2.app/Contents/MacOS/mods/CoopBuddy"
 mkdir -p "$mods"
-cp dist/RewardViewer/RewardViewer.dll dist/RewardViewer/RewardViewer.json "$mods/"
+cp dist/CoopBuddy/CoopBuddy.dll dist/CoopBuddy/CoopBuddy.json "$mods/"
 ```
 
 Install the same v0.6.0 package for the host and every client participating in votes/cursor sharing. Both local windows use the same installed files.
@@ -53,7 +53,7 @@ python3 tests/launch-local-coop.py join
 
 On Windows use `python` if that is how Python is installed. Both commands work on Linux as well. Use `--game "path/to/Steam/game/folder"` for custom installations. The launcher forces windowed mode using the game's native `STS2_DEV_WINDOWED` option.
 
-If either instance shows the game's mod-loading notice, accept it, enable Co-op Reward Viewer, close both instances, and relaunch the two commands. Each non-Steam player ID has separate account/profile settings, so both may need the initial notice. Confirm `[RewardViewer] Loaded Co-op Reward Viewer 0.6.0.` in each log.
+If either instance shows the game's mod-loading notice, accept it, enable Co-op Buddy, close both instances, and relaunch the two commands. Each non-Steam player ID has separate account/profile settings, so both may need the initial notice. Confirm `[CoopBuddy] Loaded Co-op Buddy 0.6.0.` in each log.
 
 Both windows must ready up. For a useful comparison, unlock the test profiles as described below, pick different characters, and start a fresh test run. Complete the initial event and the first combat, controlling both players.
 

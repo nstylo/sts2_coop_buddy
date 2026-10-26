@@ -3,7 +3,7 @@ using MegaCrit.Sts2.Core.Multiplayer.Game.Lobby;
 using MegaCrit.Sts2.Core.Nodes.CommonUi;
 using MegaCrit.Sts2.Core.Runs;
 
-namespace RewardViewer;
+namespace CoopBuddy;
 
 // These two native properties were renamed between public v0.107.1 and beta
 // v0.111.0. Resolve them once so the same DLL can use either installed API.

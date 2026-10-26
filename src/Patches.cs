@@ -9,7 +9,7 @@ using MegaCrit.Sts2.Core.Nodes.Screens.CardSelection;
 using MegaCrit.Sts2.Core.Nodes.Screens.Overlays;
 using MegaCrit.Sts2.Core.Rewards;
 
-namespace RewardViewer;
+namespace CoopBuddy;
 
 [HarmonyPatch(typeof(CardReward), "OnSelect")]
 internal static class OpenRewardPatch

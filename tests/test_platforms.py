@@ -19,7 +19,7 @@ spec.loader.exec_module(runner)
 
 class PlatformTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="reward-viewer-platforms-")
+        self.temporary = tempfile.TemporaryDirectory(prefix="coop-buddy-platforms-")
         self.addCleanup(self.temporary.cleanup)
         self.directory = Path(self.temporary.name).resolve()
 
@@ -49,9 +49,9 @@ class PlatformTests(unittest.TestCase):
         return root
 
     def properties(self, *values):
-        env = dict(os.environ, DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "reward-viewer-dotnet"),
+        env = dict(os.environ, DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "coop-buddy-dotnet"),
                    DOTNET_CLI_TELEMETRY_OPTOUT="1", DOTNET_GENERATE_ASPNET_CERTIFICATE="false")
-        output = subprocess.check_output(["dotnet", "msbuild", str(ROOT / "RewardViewer.csproj"), "-nologo",
+        output = subprocess.check_output(["dotnet", "msbuild", str(ROOT / "CoopBuddy.csproj"), "-nologo",
             "-getProperty:Sts2Dir,Sts2DataDir,PlatformTarget,RuntimeIdentifier", *values],
             cwd=ROOT, env=env, text=True, encoding="utf-8")
         return json.loads(output)["Properties"]
@@ -130,11 +130,11 @@ class PlatformTests(unittest.TestCase):
         project = self.directory / "project"
         output = project / "tests/bin/Release/net9.0"
         output.mkdir(parents=True)
-        (output / "RewardViewer.RuntimeTests.deps.json").write_text('{"targets":{"fixture":{}},"libraries":{}}')
-        (output / "RewardViewer.RuntimeTests.dll").write_bytes(b"test")
-        distribution = project / "dist/RewardViewer"
+        (output / "CoopBuddy.RuntimeTests.deps.json").write_text('{"targets":{"fixture":{}},"libraries":{}}')
+        (output / "CoopBuddy.RuntimeTests.dll").write_bytes(b"test")
+        distribution = project / "dist/CoopBuddy"
         distribution.mkdir(parents=True)
-        for name in ("RewardViewer.dll", "RewardViewer.json"):
+        for name in ("CoopBuddy.dll", "CoopBuddy.json"):
             (distribution / name).write_bytes(b"test")
         stage = self.directory / "stage"
         stage.mkdir()
@@ -147,15 +147,15 @@ class PlatformTests(unittest.TestCase):
         self.assertEqual(layout.pack.read_bytes(), b"original game pack")
         pinned = self.directory / "public-built-mod"
         pinned.mkdir()
-        for name in ("RewardViewer.dll", "RewardViewer.json"):
+        for name in ("CoopBuddy.dll", "CoopBuddy.json"):
             (pinned / name).write_bytes(b"pinned public artifact")
         second_stage = self.directory / "beta-stage"
         second_stage.mkdir()
         with patch.object(runner, "ROOT", project), patch.object(runner.sys, "platform", "win32"):
             pinned_executable, _ = runner.stage_install(layout, second_stage, pinned)
         staged_data = second_stage / layout.root.name / layout.data_dir.relative_to(layout.root)
-        self.assertEqual((staged_data / "RewardViewer.dll").read_bytes(), b"pinned public artifact")
-        self.assertEqual((pinned_executable.parent / "mods/RewardViewer/RewardViewer.dll").read_bytes(), b"pinned public artifact")
+        self.assertEqual((staged_data / "CoopBuddy.dll").read_bytes(), b"pinned public artifact")
+        self.assertEqual((pinned_executable.parent / "mods/CoopBuddy/CoopBuddy.dll").read_bytes(), b"pinned public artifact")
 
     def test_filesystem_clone_failure_falls_back_to_private_copy(self):
         source = self.directory / "source.pck"

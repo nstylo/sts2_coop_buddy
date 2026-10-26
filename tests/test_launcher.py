@@ -14,7 +14,7 @@ spec.loader.exec_module(launcher)
 
 class LauncherTests(unittest.TestCase):
     def setUp(self):
-        temporary = tempfile.TemporaryDirectory(prefix="reward-viewer-launcher-")
+        temporary = tempfile.TemporaryDirectory(prefix="coop-buddy-launcher-")
         self.addCleanup(temporary.cleanup)
         self.logs = Path(temporary.name)
 

@@ -17,7 +17,7 @@ spec.loader.exec_module(workshop)
 
 class WorkshopTests(unittest.TestCase):
     def setUp(self):
-        temporary = tempfile.TemporaryDirectory(prefix="reward-viewer-workshop-")
+        temporary = tempfile.TemporaryDirectory(prefix="coop-buddy-workshop-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
         output = redirect_stdout(io.StringIO())
@@ -25,14 +25,14 @@ class WorkshopTests(unittest.TestCase):
         self.addCleanup(output.__exit__, None, None, None)
         self.workspace = self.root / "workshop"
         self.workspace.mkdir()
-        self.manifest = {"id": "RewardViewer", "version": "0.5.2", "min_game_version": "0.111.0"}
-        (self.root / "RewardViewer.json").write_text(json.dumps(self.manifest))
-        self.source = self.root / "dist/RewardViewer"
+        self.manifest = {"id": "CoopBuddy", "version": "0.5.2", "min_game_version": "0.111.0"}
+        (self.root / "CoopBuddy.json").write_text(json.dumps(self.manifest))
+        self.source = self.root / "dist/CoopBuddy"
         self.source.mkdir(parents=True)
-        (self.source / "RewardViewer.json").write_text(json.dumps(self.manifest))
-        (self.source / "RewardViewer.dll").write_bytes(b"fixture mod assembly")
+        (self.source / "CoopBuddy.json").write_text(json.dumps(self.manifest))
+        (self.source / "CoopBuddy.dll").write_bytes(b"fixture mod assembly")
         (self.source / "GodotSharp.dll").write_bytes(b"must not be uploaded")
-        (self.source / "RewardViewer.pdb").write_bytes(b"must not be uploaded")
+        (self.source / "CoopBuddy.pdb").write_bytes(b"must not be uploaded")
         for name in ["workshop.json", "image.png"]:
             (self.workspace / name).write_bytes((ROOT / "workshop" / name).read_bytes())
         for name, value in [("ROOT", self.root), ("WORKSPACE", self.workspace)]:
@@ -48,7 +48,7 @@ class WorkshopTests(unittest.TestCase):
         workshop.prepare(build=False)
         files = {path.relative_to(self.workspace / "content").as_posix()
                  for path in (self.workspace / "content").rglob("*") if path.is_file()}
-        self.assertEqual(files, {"RewardViewer/RewardViewer.dll", "RewardViewer/RewardViewer.json"})
+        self.assertEqual(files, {"CoopBuddy/CoopBuddy.dll", "CoopBuddy/CoopBuddy.json"})
         self.assertEqual(identity.read_text(), "1234567890\n")
         self.assertEqual((self.workspace / "workshop.json").read_bytes(), metadata)
 
@@ -86,7 +86,7 @@ class WorkshopTests(unittest.TestCase):
 
     def test_stale_content_oversized_preview_and_invalid_identity_are_rejected(self):
         workshop.prepare(build=False)
-        staged = self.workspace / "content/RewardViewer/RewardViewer.dll"
+        staged = self.workspace / "content/CoopBuddy/CoopBuddy.dll"
         staged.write_bytes(b"old build")
         with self.assertRaisesRegex(ValueError, "differs from dist"):
             workshop.validate_workspace()
@@ -120,22 +120,22 @@ class WorkshopTests(unittest.TestCase):
 
     def test_branch_check_restores_public_artifact_even_if_beta_fails(self):
         import subprocess
-        original = (self.source / "RewardViewer.dll").read_bytes()
+        original = (self.source / "CoopBuddy.dll").read_bytes()
         public = SimpleNamespace(root=self.root / "public", data_dir=self.root / "public/data")
         beta = SimpleNamespace(root=self.root / "beta", data_dir=self.root / "beta/data")
         calls = []
         def run(command, **kwargs):
             calls.append(command)
             pinned = Path(command[command.index("--mod-dir") + 1])
-            self.assertEqual((pinned / "RewardViewer.dll").read_bytes(), original)
-            (self.source / "RewardViewer.dll").write_bytes(b"test runner rebuilt a different artifact")
+            self.assertEqual((pinned / "CoopBuddy.dll").read_bytes(), original)
+            (self.source / "CoopBuddy.dll").write_bytes(b"test runner rebuilt a different artifact")
             if len(calls) == 2:
                 raise subprocess.CalledProcessError(1, command)
         with patch.object(workshop, "prepare"), patch.object(workshop, "resolve_layout", side_effect=[public, beta]), \
                 patch.object(workshop.subprocess, "run", side_effect=run):
             with self.assertRaises(subprocess.CalledProcessError):
                 workshop.check_branches(public.root, beta.root)
-        self.assertEqual((self.source / "RewardViewer.dll").read_bytes(), original)
+        self.assertEqual((self.source / "CoopBuddy.dll").read_bytes(), original)
         self.assertEqual(calls[0][calls[0].index("--mod-dir") + 1], calls[1][calls[1].index("--mod-dir") + 1])
 
 

@@ -35,7 +35,7 @@ def copy_private(source, target):
 
 
 def stage_install(layout, stage, mod_dir=None):
-    mod_dir = mod_dir or ROOT / "dist/RewardViewer"
+    mod_dir = mod_dir or ROOT / "dist/CoopBuddy"
     target = stage / layout.root.name
     special = (layout.executable, layout.data_dir, layout.pack)
     def stage_path(source, destination):
@@ -68,32 +68,32 @@ def stage_install(layout, stage, mod_dir=None):
         else:
             shutil.copy2(path, out)
     for path in (ROOT / "tests/bin/Release/net9.0").iterdir():
-        if path.name.startswith("RewardViewer"):
+        if path.name.startswith("CoopBuddy"):
             out = data_dir / path.name
             out.unlink(missing_ok=True)
             shutil.copy2(path, out)
     # Use the shipped self-contained CLR and its dependency graph on every OS.
-    shutil.copy2(layout.data_dir / "sts2.runtimeconfig.json", data_dir / "RewardViewer.RuntimeTests.runtimeconfig.json")
+    shutil.copy2(layout.data_dir / "sts2.runtimeconfig.json", data_dir / "CoopBuddy.RuntimeTests.runtimeconfig.json")
     game_deps = json.loads((layout.data_dir / "sts2.deps.json").read_text())
-    test_deps = json.loads((data_dir / "RewardViewer.RuntimeTests.deps.json").read_text())
+    test_deps = json.loads((data_dir / "CoopBuddy.RuntimeTests.deps.json").read_text())
     graph = game_deps["targets"][game_deps["runtimeTarget"]["name"]]
     for test_graph in test_deps["targets"].values():
         for name, value in test_graph.items():
-            if name.startswith(("RewardViewer/", "RewardViewer.RuntimeTests/")):
+            if name.startswith(("CoopBuddy/", "CoopBuddy.RuntimeTests/")):
                 graph[name] = value
                 game_deps["libraries"][name] = test_deps["libraries"][name]
-    (data_dir / "RewardViewer.RuntimeTests.deps.json").write_text(json.dumps(game_deps))
-    alias = data_dir.parent / f"data_RewardViewer.RuntimeTests_{layout.data_suffix}"
+    (data_dir / "CoopBuddy.RuntimeTests.deps.json").write_text(json.dumps(game_deps))
+    alias = data_dir.parent / f"data_CoopBuddy.RuntimeTests_{layout.data_suffix}"
     if sys.platform == "win32":
         shutil.copytree(data_dir, alias)
     else:
         alias.symlink_to(data_dir, target_is_directory=True)
     executable = target / layout.executable.relative_to(layout.root)
-    mods = executable.parent / "mods/RewardViewer"
+    mods = executable.parent / "mods/CoopBuddy"
     mods.mkdir(parents=True)
-    for name in ("RewardViewer.dll", "RewardViewer.json"):
+    for name in ("CoopBuddy.dll", "CoopBuddy.json"):
         shutil.copy2(mod_dir / name, mods / name)
-        # The test assembly references RewardViewer too. Both loader paths must
+        # The test assembly references CoopBuddy too. Both loader paths must
         # use the pinned artifact, even when tests were built against another game.
         shutil.copy2(mod_dir / name, data_dir / name)
     pack = target / layout.pack.relative_to(layout.root)
@@ -136,15 +136,15 @@ def configure_test_pack(pack):
         for key in list(settings):
             if key.startswith(b"autoload/"):
                 del settings[key]
-        settings[b"dotnet/project/assembly_name"] = variant_string("RewardViewer.RuntimeTests")
-        settings[b"application/run/main_scene"] = variant_string("res://reward_viewer_tests.tscn")
+        settings[b"dotnet/project/assembly_name"] = variant_string("CoopBuddy.RuntimeTests")
+        settings[b"application/run/main_scene"] = variant_string("res://coop_buddy_tests.tscn")
         settings[b"sentry/config/dsn"] = variant_string("")
         config = b"ECFG" + struct.pack("<I", len(settings))
         for key, value in settings.items():
             config += struct.pack("<I", len(key)) + key + struct.pack("<I", len(value)) + value
         for path, raw in {
             b"project.binary": config,
-            b"reward_viewer_tests.tscn": b'[gd_scene format=3]\n[node name="Tests" type="Node"]\n'
+            b"coop_buddy_tests.tscn": b'[gd_scene format=3]\n[node name="Tests" type="Node"]\n'
         }.items():
             file.seek(0, 2)
             file.write(b"\0" * (-file.tell() % 16))
@@ -167,11 +167,11 @@ def main():
     parser.add_argument("--pack", type=Path)
     parser.add_argument("--mod-dir", type=Path, help="Test this existing DLL/manifest package, while compiling tests against the selected game")
     args = parser.parse_args()
-    env = dict(os.environ, DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "reward-viewer-dotnet"),
+    env = dict(os.environ, DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "coop-buddy-dotnet"),
                DOTNET_CLI_TELEMETRY_OPTOUT="1", DOTNET_GENERATE_ASPNET_CERTIFICATE="false", DOTNET_NOLOGO="1")
     game = args.game
     if game is None:
-        output = subprocess.check_output(["dotnet", "msbuild", "RewardViewer.csproj", "-nologo", "-getProperty:Sts2Dir,Sts2DataDir"],
+        output = subprocess.check_output(["dotnet", "msbuild", "CoopBuddy.csproj", "-nologo", "-getProperty:Sts2Dir,Sts2DataDir"],
                                              cwd=ROOT, env=env, text=True, encoding="utf-8")
         properties = json.loads(output)["Properties"]
         if properties["Sts2Dir"]:
@@ -181,16 +181,16 @@ def main():
             game = data.parents[2] if sys.platform == "darwin" else data.parent
             args.data_dir = data
     layout = resolve_layout(game, executable=args.executable, data_dir=args.data_dir, pack=args.pack)
-    mod_dir = args.mod_dir.resolve() if args.mod_dir else ROOT / "dist/RewardViewer"
+    mod_dir = args.mod_dir.resolve() if args.mod_dir else ROOT / "dist/CoopBuddy"
     if args.mod_dir:
-        for name in ("RewardViewer.dll", "RewardViewer.json"):
+        for name in ("CoopBuddy.dll", "CoopBuddy.json"):
             if not (mod_dir / name).is_file():
                 parser.error(f"Missing pinned mod file: {mod_dir / name}")
     print(f"Testing {layout.data_suffix}: {layout.executable}", flush=True)
     subprocess.run(["dotnet", "build", "tests/RuntimeTests.csproj", "-c", "Release", "--disable-build-servers",
                     f"-p:Sts2DataDir={layout.data_dir}"], cwd=ROOT, env=env, check=True)
-    stage = Path(tempfile.mkdtemp(prefix="reward-viewer-tests-"))
-    print(f"TEST_MOD_SHA256: {hashlib.sha256((mod_dir / 'RewardViewer.dll').read_bytes()).hexdigest()}", flush=True)
+    stage = Path(tempfile.mkdtemp(prefix="coop-buddy-tests-"))
+    print(f"TEST_MOD_SHA256: {hashlib.sha256((mod_dir / 'CoopBuddy.dll').read_bytes()).hexdigest()}", flush=True)
     executable, pack = stage_install(layout, stage, mod_dir)
     configure_test_pack(pack)
     print(f"Test staging directory: {stage}", flush=True)
@@ -202,7 +202,7 @@ def main():
                             text=True, encoding="utf-8", errors="replace", timeout=90)
     (stage / "stdout.log").write_text(result.stdout, encoding="utf-8")
     print(result.stdout)
-    if result.returncode or "REWARD_VIEWER_TESTS_PASSED:" not in result.stdout:
+    if result.returncode or "COOP_BUDDY_TESTS_PASSED:" not in result.stdout:
         return result.returncode if result.returncode > 0 else 1
     return 0
 

@@ -19,7 +19,7 @@ internal static class Main
             NativeFuncs.Initialize(native, size);
             ManagedCallbacks.Create(managed);
             ScriptManagerBridge.LookupScriptsInAssembly(typeof(MegaCrit.Sts2.Core.Nodes.NGame).Assembly);
-            Callable.From(() => RewardViewer.Tests.RuntimeTests.Run()).CallDeferred();
+            Callable.From(() => CoopBuddy.Tests.RuntimeTests.Run()).CallDeferred();
             return godot_bool.True;
         }
         catch (Exception exception)

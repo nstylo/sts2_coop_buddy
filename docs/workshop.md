@@ -12,14 +12,14 @@ workshop/
   image.png                     Workshop thumbnail, under 1 MB
   image.svg                     Editable source for the original thumbnail
   mod_id.txt                    Created by a successful upload; keep for updates
-  content/RewardViewer/
-    RewardViewer.dll
-    RewardViewer.json
+  content/CoopBuddy/
+    CoopBuddy.dll
+    CoopBuddy.json
 ```
 
 Only `content/` is uploaded as installable mod content. The uploader sends the thumbnail and listing separately. `content/` is generated and ignored by Git. Keep `mod_id.txt` backed up: it identifies the existing Workshop item, and is deliberately outside `dist/` so a clean rebuild will not delete it.
 
-`workshop.json` labels the item **Co-op Reward Viewer**, covers `public` through `public-beta`, declares no dependencies, and starts with `private` visibility. The current shared DLL is verified against public v0.107.1 and beta v0.111.0. Steam supports [branch-specific item versioning](https://partner.steamgames.com/doc/features/workshop/itemversioning): one listing can serve compatible versions to both branches. The [official workspace documentation](https://github.com/megacrit/sts2-mod-uploader/blob/main/template/README.md) notes that branch-range settings can behave inconsistently; verify them on the Workshop page after uploading.
+`workshop.json` labels the item **Co-op Buddy**, covers `public` through `public-beta`, declares no dependencies, and starts with `private` visibility. The current shared DLL is verified against public v0.107.1 and beta v0.111.0. Steam supports [branch-specific item versioning](https://partner.steamgames.com/doc/features/workshop/itemversioning): one listing can serve compatible versions to both branches. The [official workspace documentation](https://github.com/megacrit/sts2-mod-uploader/blob/main/template/README.md) notes that branch-range settings can behave inconsistently; verify them on the Workshop page after uploading.
 
 ## Prepare and review
 
@@ -69,7 +69,7 @@ The official uploader saves that ID after a successful update. Do not delete it 
 
 ## Verify subscription delivery
 
-Subscribe to the item and let Steam finish downloading it. Move the manually installed `RewardViewer` directory out of the game's `mods/` folder while the game is closed, launch STS2 normally through Steam, enable the Workshop mod, and restart if prompted. Confirm its source is Steam Workshop and the loaded version is correct. With equal versions, the inspected game loader prefers the manually installed copy, so leaving both installed does not verify Workshop delivery.
+Subscribe to the item and let Steam finish downloading it. Move the manually installed `CoopBuddy` directory out of the game's `mods/` folder while the game is closed, launch STS2 normally through Steam, enable the Workshop mod, and restart if prompted. Confirm its source is Steam Workshop and the loaded version is correct. With equal versions, the inspected game loader prefers the manually installed copy, so leaving both installed does not verify Workshop delivery.
 
 For co-op, install the same version on the host and participating players and check viewing, cursors, votes, pick/skip cleanup and reconnects. The local fastmp launcher uses `--force-steam=off`, so it still needs the manual copy; restore that copy before returning to fastmp tests.
 

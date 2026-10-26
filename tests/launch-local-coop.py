@@ -100,9 +100,9 @@ def main():
     game = args.game
     if game is None:
         properties = json.loads(subprocess.check_output([
-            "dotnet", "msbuild", "RewardViewer.csproj", "-nologo", "-getProperty:Sts2Dir,Sts2DataDir"
+            "dotnet", "msbuild", "CoopBuddy.csproj", "-nologo", "-getProperty:Sts2Dir,Sts2DataDir"
         ], cwd=ROOT, text=True, encoding="utf-8", env=dict(os.environ, DOTNET_NOLOGO="1",
-            DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "reward-viewer-dotnet"),
+            DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "coop-buddy-dotnet"),
             DOTNET_GENERATE_ASPNET_CERTIFICATE="false", DOTNET_CLI_TELEMETRY_OPTOUT="1")))["Properties"]
         if properties["Sts2Dir"]:
             game = Path(properties["Sts2Dir"])
@@ -124,8 +124,8 @@ def launch(layout, role, client_id, dry_run, parser):
     if dry_run:
         print(shlex.join(command))
         return 0
-    mod_dir = layout.executable.parent / "mods/RewardViewer"
-    for name in ("RewardViewer.dll", "RewardViewer.json"):
+    mod_dir = layout.executable.parent / "mods/CoopBuddy"
+    for name in ("CoopBuddy.dll", "CoopBuddy.json"):
         if not (mod_dir / name).is_file():
             parser.error(f"Install {name} in {mod_dir} first; see README.md")
     log.parent.mkdir(parents=True, exist_ok=True)

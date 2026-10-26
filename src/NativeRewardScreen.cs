@@ -19,7 +19,7 @@ using MegaCrit.Sts2.Core.Platform;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.addons.mega_text;
 
-namespace RewardViewer;
+namespace CoopBuddy;
 
 // Use the real picker scene and its native hover, tooltips, spacing and inspection.
 // Only these marked instances are read-only; the original local picker is untouched.
@@ -104,7 +104,7 @@ internal static class NativeRewardScreen
         var clones = reward.Reward.Cards.Select(card => (CardModel)card.ClonePreservingMutability()).ToArray();
         var screen = PreloadManager.Cache.GetScene("res://scenes/screens/card_selection/card_reward_selection_screen.tscn")
             .Instantiate<NCardRewardSelectionScreen>();
-        screen.Name = "RewardViewerPreview";
+        screen.Name = "CoopBuddyPreview";
         Options(screen) = clones.Select(card => new CardCreationResult(card)).ToArray();
         Alternatives(screen) = Array.Empty<CardRewardAlternative>();
         Previews.Add(screen, new Preview(reward, clones, back));
@@ -138,7 +138,7 @@ internal static class NativeRewardScreen
         banner.SelfModulate = new Color(0.72f, 0.88f, 1f);
         banner.label.AddThemeColorOverride("font_color", new Color(0.88f, 0.96f, 1f));
         var button = NCardRewardAlternativeButton.Create(BackLabel(), MegaInput.cancel);
-        button.Name = "RewardViewerBack";
+        button.Name = "CoopBuddyBack";
         button.Connect(NClickableControl.SignalName.Released, Callable.From<NButton>(_ => ModEntry.Guard(preview.Back)));
         preview.BackButton = button;
         screen.GetNode<Control>("UI/RewardAlternatives").AddChild(button);

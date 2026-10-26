@@ -11,7 +11,7 @@ using MegaCrit.Sts2.Core.Multiplayer.Serialization;
 using MegaCrit.Sts2.Core.Multiplayer.Transport;
 using MegaCrit.Sts2.Core.Platform;
 
-namespace RewardViewer.Tests;
+namespace CoopBuddy.Tests;
 
 // Exercise native handshakes and receivers with a vanilla message table. Swap the
 // process-wide table only inside this synchronous block, then restore it before UI tests.
@@ -23,8 +23,8 @@ internal static class MixedPeerTests
         var modded = (NetTypeCache<INetMessage>)field.GetValue(null)!;
         var vanilla = new NetTypeCache<INetMessage>(INetMessageSubtypes.All.ToList());
         check(INetMessageSubtypes.All.All(type => modded.TypeToId(type) == vanilla.TypeToId(type)) &&
-            modded.TypeToId<ZZZRewardViewerViewMessage>() >= INetMessageSubtypes.All.Count() &&
-            modded.TypeToId<ZZZRewardViewerVoteMessage>() >= INetMessageSubtypes.All.Count(),
+            modded.TypeToId<ZZZCoopBuddyViewMessage>() >= INetMessageSubtypes.All.Count() &&
+            modded.TypeToId<ZZZCoopBuddyVoteMessage>() >= INetMessageSubtypes.All.Count(),
             "installing the viewer preserves every vanilla network message ID");
 
         // Public v0.107.1 predates transport-level PeerVersionInfo handshakes.
@@ -42,7 +42,7 @@ internal static class MixedPeerTests
             Set(version, "gameplayAffectingMods", new List<string>());
             Set(version, "otherMods", new List<string>());
             var modVersion = System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(version);
-            Set(modVersion, "otherMods", new List<string> { "RewardViewer-0.6.0" });
+            Set(modVersion, "otherMods", new List<string> { "CoopBuddy-0.6.0" });
             var managerType = assembly.GetType("MegaCrit.Sts2.Core.Multiplayer.Connection.HandshakeManager")!;
             var handlerType = assembly.GetType("MegaCrit.Sts2.Core.Multiplayer.Connection.IHandshakeHandler")!;
             bool Handshake(NetGameType role, object local, object remote)
@@ -67,8 +67,8 @@ internal static class MixedPeerTests
 
         var bus = CreateBus();
         byte[] Encode(INetMessage message) => bus.SerializeMessage(1000, message, out int length).AsSpan(0, length).ToArray();
-        byte[] view = Encode(new ZZZRewardViewerViewMessage());
-        byte[] vote = Encode(new ZZZRewardViewerVoteMessage());
+        byte[] view = Encode(new ZZZCoopBuddyViewMessage());
+        byte[] vote = Encode(new ZZZCoopBuddyVoteMessage());
         byte[] input = Encode(new PeerInputMessage { screenType = NetScreenType.CardSelection, netMousePos = Vector2.One });
         try
         {

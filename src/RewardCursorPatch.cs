@@ -4,7 +4,7 @@ using MegaCrit.Sts2.Core.Multiplayer.Game.PeerInput;
 using MegaCrit.Sts2.Core.Nodes;
 using MegaCrit.Sts2.Core.Nodes.Multiplayer;
 
-namespace RewardViewer;
+namespace CoopBuddy;
 
 // Preserve native cursor movement, interpolation, artwork, size and input packets.
 // Only visibility changes: reward viewers must be looking at the very same offer.

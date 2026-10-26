@@ -13,7 +13,7 @@ using MegaCrit.Sts2.Core.Nodes.Screens.ScreenContext;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.Platform;
 
-namespace RewardViewer;
+namespace CoopBuddy;
 
 // Native player rows reserve the icon's position; a layer above the overlay backstop
 // makes that same icon clickable while a reward picker covers the rest of the game.
@@ -33,7 +33,7 @@ internal sealed class RewardOverlay
         AccessTools.FieldRefAccess<NMultiplayerPlayerState, Tween?>("_locationIconTween");
     private readonly Dictionary<ulong, PlayerButton> _buttons = [];
     private readonly NRun _run;
-    private readonly Control _root = new() { Name = "RewardViewer", MouseFilter = Control.MouseFilterEnum.Ignore };
+    private readonly Control _root = new() { Name = "CoopBuddy", MouseFilter = Control.MouseFilterEnum.Ignore };
     private OpenReward? _watching;
     private NCardRewardSelectionScreen? _preview;
     private string _signature = "";
@@ -46,13 +46,13 @@ internal sealed class RewardOverlay
 
     internal static void Attach(NRun run)
     {
-        if (!GodotObject.IsInstanceValid(run) || run.HasNode("RewardViewerLayer")) return;
+        if (!GodotObject.IsInstanceValid(run) || run.HasNode("CoopBuddyLayer")) return;
         new RewardOverlay(run).Mount();
     }
 
     private void Mount()
     {
-        var layer = new CanvasLayer { Name = "RewardViewerLayer", Layer = 40 };
+        var layer = new CanvasLayer { Name = "CoopBuddyLayer", Layer = 40 };
         _run.AddChild(layer);
         layer.AddChild(_root);
         _root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
@@ -179,7 +179,7 @@ internal sealed class RewardOverlay
     {
         var button = new TextureButton
         {
-            Name = $"RewardViewerPlayer{row.Player.NetId}",
+            Name = $"CoopBuddyPlayer{row.Player.NetId}",
             TextureNormal = NetScreenType.CardSelection.GetLocationIcon(),
             IgnoreTextureSize = true,
             StretchMode = TextureButton.StretchModeEnum.KeepAspectCentered,
@@ -191,7 +191,7 @@ internal sealed class RewardOverlay
         _root.AddChild(button);
         var frame = new Control
         {
-            Name = "RewardViewerHover", MouseFilter = Control.MouseFilterEnum.Ignore,
+            Name = "CoopBuddyHover", MouseFilter = Control.MouseFilterEnum.Ignore,
             Scale = Vector2.One * ReticleScale
         };
         button.AddChild(frame);

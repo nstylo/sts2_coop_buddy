@@ -43,7 +43,7 @@ using MegaCrit.Sts2.Core.TestSupport;
 using MegaCrit.Sts2.Core.Saves;
 using MegaCrit.Sts2.Core.Unlocks;
 
-namespace RewardViewer.Tests;
+namespace CoopBuddy.Tests;
 
 internal static class RuntimeTests
 {
@@ -77,7 +77,7 @@ internal static class RuntimeTests
             var remote = Player.CreateForNewRun<Silent>(UnlockState.all, 1000);
             var thirdPlayer = Player.CreateForNewRun<Ironclad>(UnlockState.all, 2000);
             var fourthPlayer = Player.CreateForNewRun<Ironclad>(UnlockState.all, 3000);
-            var state = RunState.CreateForTest([local, remote, thirdPlayer, fourthPlayer], seed: "REWARDVIEWER");
+            var state = RunState.CreateForTest([local, remote, thirdPlayer, fourthPlayer], seed: "COOPBUDDY");
             state.AppendToMapPointHistory(MapPointType.Monster, RoomType.Monster, null);
             var net = DispatchProxy.Create<INetGameService, MultiplayerStub>();
             RunManager.Instance.SetUpTest(state, net);
@@ -167,7 +167,7 @@ internal static class RuntimeTests
 
             // Start only the UI nodes the viewer uses. Test-only patches skip unrelated
             // game startup, Steam, full HUD initialization and run processing.
-            var harness = new Harmony("RewardViewer.RuntimeTests.UiHarness");
+            var harness = new Harmony("CoopBuddy.RuntimeTests.UiHarness");
             foreach (var (type, method) in new (Type, string)[] {
                 (typeof(NGame), "_EnterTree"), (typeof(NGame), "_Ready"), (typeof(NGame), "_ExitTree"),
                 (typeof(NRun), "_Ready"), (typeof(NRun), "_Process"), (typeof(NRun), "_Notification"),
@@ -245,8 +245,8 @@ internal static class RuntimeTests
             playerRows.AddChild(remoteRow);
             RewardOverlay.Attach(run);
             await Frame(tree);
-            var localButton = run.GetNode<TextureButton>("RewardViewerLayer/RewardViewer/RewardViewerPlayer1");
-            var remoteButton = run.GetNode<TextureButton>("RewardViewerLayer/RewardViewer/RewardViewerPlayer1000");
+            var localButton = run.GetNode<TextureButton>("CoopBuddyLayer/CoopBuddy/CoopBuddyPlayer1");
+            var remoteButton = run.GetNode<TextureButton>("CoopBuddyLayer/CoopBuddy/CoopBuddyPlayer1000");
             Check(localButton.Visible && remoteButton.Visible, "open local and remote rewards have player-row buttons");
             Check(remoteButton.TextureNormal == MegaCrit.Sts2.Core.Entities.Multiplayer.NetScreenType.CardSelection.GetLocationIcon(),
                 "reward button reuses the exact vanilla status icon");
@@ -254,7 +254,7 @@ internal static class RuntimeTests
                 "clickable icon aligns with the vanilla player's status slot");
             Check(remoteButton.MouseDefaultCursorShape == Control.CursorShape.Arrow,
                 "reward icon preserves the game's custom arrow cursor instead of a system hand");
-            var iconReticle = remoteButton.GetNode<NSelectionReticle>("RewardViewerHover/Reticle");
+            var iconReticle = remoteButton.GetNode<NSelectionReticle>("CoopBuddyHover/Reticle");
             remoteButton.EmitSignal(Control.SignalName.MouseEntered);
             await Delay(tree);
             Check(iconReticle.IsSelected && remoteButton.Scale.X > 1.1f,
@@ -272,7 +272,7 @@ internal static class RuntimeTests
             Check(rendered.Length == 2 && rendered[0].Model != bash && rendered[0].Model!.IsUpgraded &&
                 rendered[0].Model!.Enchantment?.Amount == 2, "native full-size reward scene renders exact cloned cards");
             var navigation = preview!.GetNode<Control>("UI/RewardAlternatives");
-            var backButton = navigation.GetNode<NCardRewardAlternativeButton>("RewardViewerBack");
+            var backButton = navigation.GetNode<NCardRewardAlternativeButton>("CoopBuddyBack");
             Check(navigation.GetChildCount() == 1 && backButton.GetNode<Label>("Label").Text == "Back",
                 "spectator replaces gameplay alternatives with a native Back button while the local picker is open");
             var teammateBanner = preview.GetNode<NCommonBanner>("UI/Banner");
@@ -284,7 +284,7 @@ internal static class RuntimeTests
                 "observed names respect the length limit without splitting Unicode characters or allowing extra lines");
             Check(((IOverlayScreen)preview).ScreenType == NetScreenType.None && ((IOverlayScreen)ownScreen).ScreenType == NetScreenType.CardSelection,
                 "spectating cannot publish the vanilla choosing-card status icon");
-            var localReticle = localButton.GetNode<NSelectionReticle>("RewardViewerHover/Reticle");
+            var localReticle = localButton.GetNode<NSelectionReticle>("CoopBuddyHover/Reticle");
             Check(iconReticle.IsSelected && !localReticle.IsSelected,
                 "native selection corners identify whose reward is being viewed");
             remoteButton.EmitSignal(Control.SignalName.MouseEntered);
@@ -312,22 +312,22 @@ internal static class RuntimeTests
                 _inspected == null && !remoteTask.IsCompleted && !forbiddenChoice.IsCompleted,
                 "hover reordering cannot change which offered card receives the vote");
             await Delay(tree);
-            var ownVoteIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote1");
+            var ownVoteIcon = preview.GetNode<TextureRect>("CoopBuddyVotes/Card0Votes/Vote1");
             Check(ownVoteIcon.Texture == local.Character.IconTexture && ownVoteIcon.CustomMinimumSize == new Vector2(48, 48) &&
                 holder.CardNode!.CardHighlight.Modulate == NCardHighlight.gold &&
                 ((ShaderMaterial)holder.CardNode.CardHighlight.Material).GetShaderParameter("width").AsSingle() > 0,
                 "a local recommendation shows the voter's native portrait alongside the native card glow");
             AccessTools.Method(typeof(RewardCollaboration), "ReceiveVote").Invoke(RewardCollaboration.Current,
-                [new ZZZRewardViewerVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = 0 }, 2000UL]);
+                [new ZZZCoopBuddyVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = 0 }, 2000UL]);
             await Delay(tree);
-            var voteIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote2000");
+            var voteIcon = preview.GetNode<TextureRect>("CoopBuddyVotes/Card0Votes/Vote2000");
             Check(voteIcon.Texture == thirdPlayer.Character.IconTexture && voteIcon.CustomMinimumSize == new Vector2(48, 48),
                 "teammate recommendations use larger native portraits");
             AccessTools.Method(typeof(RewardCollaboration), "ReceiveVote").Invoke(RewardCollaboration.Current,
-                [new ZZZRewardViewerVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = 0 }, 3000UL]);
+                [new ZZZCoopBuddyVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = 0 }, 3000UL]);
             await Delay(tree);
-            voteIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote2000");
-            var twinIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote3000");
+            voteIcon = preview.GetNode<TextureRect>("CoopBuddyVotes/Card0Votes/Vote2000");
+            var twinIcon = preview.GetNode<TextureRect>("CoopBuddyVotes/Card0Votes/Vote3000");
             Check(voteIcon.Texture == twinIcon.Texture &&
                 RewardVoteDisplay.PortraitAt([voteIcon, twinIcon], voteIcon.GetGlobalTransform() * (voteIcon.Size * 0.5f)) == voteIcon &&
                 RewardVoteDisplay.PortraitAt([voteIcon, twinIcon], twinIcon.GetGlobalTransform() * (twinIcon.Size * 0.5f)) == twinIcon &&
@@ -348,17 +348,17 @@ internal static class RuntimeTests
             Check(firstName != secondName && secondName.Contains(PlatformUtil.GetPlayerName(RunManager.Instance.NetService.Platform, 3000)),
                 "identical character portraits show their individual voters' names");
             AccessTools.Method(typeof(RewardCollaboration), "ReceiveVote").Invoke(RewardCollaboration.Current,
-                [new ZZZRewardViewerVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = -1 }, 3000UL]);
+                [new ZZZCoopBuddyVoteMessage { Reward = RewardKey.For(active)!.Value, CardIndex = -1 }, 3000UL]);
             await Delay(tree);
             Check(hoverTips.GetChildCount() == 0, "removing a vote also removes its native name popup");
-            voteIcon = preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote2000");
+            voteIcon = preview.GetNode<TextureRect>("CoopBuddyVotes/Card0Votes/Vote2000");
             cardRow.MoveChild(otherHolder, cardRow.GetChildCount() - 1);
             await Delay(tree);
             var voteRow = voteIcon.GetParent<Control>();
             Vector2 expectedCorner = holder.GetGlobalTransform() *
                 (NCard.defaultSize * 0.5f - voteRow.Size - new Vector2(10, 10));
             Check(voteIcon.IsVisibleInTree() && voteRow.GlobalPosition.DistanceTo(expectedCorner) < 1 &&
-                preview.GetNode<Control>("RewardViewerVotes").ZIndex > 0,
+                preview.GetNode<Control>("CoopBuddyVotes").ZIndex > 0,
                 "teammate portrait stays on its offered card without hover after the native node order changes");
             AccessTools.Method(typeof(NCardRewardSelectionScreen), "InspectCard").Invoke(preview, [holder]);
             Check(_inspected?.Count == 2 && _inspectedIndex == 0 && _inspected[0] != bash && !remoteTask.IsCompleted,
@@ -367,15 +367,15 @@ internal static class RuntimeTests
             await Delay(tree);
             Check(((ShaderMaterial)holder.CardNode!.CardHighlight.Material).GetShaderParameter("width").AsSingle() == 0 &&
                 otherHolder.CardNode!.CardHighlight.Modulate == NCardHighlight.gold &&
-                preview.GetNodeOrNull<TextureRect>("RewardViewerVotes/Card0Votes/Vote1") == null &&
-                preview.GetNode<TextureRect>("RewardViewerVotes/Card1Votes/Vote1").Texture == local.Character.IconTexture &&
-                preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote2000").Texture == thirdPlayer.Character.IconTexture,
+                preview.GetNodeOrNull<TextureRect>("CoopBuddyVotes/Card0Votes/Vote1") == null &&
+                preview.GetNode<TextureRect>("CoopBuddyVotes/Card1Votes/Vote1").Texture == local.Character.IconTexture &&
+                preview.GetNode<TextureRect>("CoopBuddyVotes/Card0Votes/Vote2000").Texture == thirdPlayer.Character.IconTexture,
                 "moving a local vote moves its portrait and glow while preserving teammate recommendations");
             AccessTools.Method(typeof(NCardRewardSelectionScreen), "SelectCard").Invoke(preview, [otherHolder]);
             await Delay(tree);
             Check(((ShaderMaterial)otherHolder.CardNode!.CardHighlight.Material).GetShaderParameter("width").AsSingle() == 0 &&
-                preview.GetNodeOrNull<Control>("RewardViewerVotes/Card1Votes") == null &&
-                preview.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote2000").IsVisibleInTree(),
+                preview.GetNodeOrNull<Control>("CoopBuddyVotes/Card1Votes") == null &&
+                preview.GetNode<TextureRect>("CoopBuddyVotes/Card0Votes/Vote2000").IsVisibleInTree(),
                 "clearing a local vote removes its portrait and glow while preserving teammate recommendations");
             preview.AfterOverlayHidden();
             bool hiddenBackDisabled = !backButton.IsEnabled;
@@ -409,9 +409,9 @@ internal static class RuntimeTests
                 originalLocalHolders[^1]!.Position.IsEqualApprox(new Vector2(350, 0)),
                 "repeated entrances finish at the original layout without accumulating position drift");
             AccessTools.Method(typeof(RewardCollaboration), "ReceiveVote").Invoke(RewardCollaboration.Current,
-                [new ZZZRewardViewerVoteMessage { Reward = RewardKey.For(own)!.Value, CardIndex = 0 }, 1000UL]);
+                [new ZZZCoopBuddyVoteMessage { Reward = RewardKey.For(own)!.Value, CardIndex = 0 }, 1000UL]);
             await Delay(tree);
-            Check(ownScreen.GetNode<TextureRect>("RewardViewerVotes/Card0Votes/Vote1000").Texture == remote.Character.IconTexture && !ownChoice.IsCompleted,
+            Check(ownScreen.GetNode<TextureRect>("CoopBuddyVotes/Card0Votes/Vote1000").Texture == remote.Character.IconTexture && !ownChoice.IsCompleted,
                 "reward owner sees the teammate's native recommendation icon while retaining selection control");
             remoteButton.EmitSignal(BaseButton.SignalName.Pressed);
             var bindings = (Dictionary<StringName, List<Action>>)AccessTools.Field(typeof(NHotkeyManager),
@@ -445,7 +445,7 @@ internal static class RuntimeTests
             await Delay(tree);
             remoteButton.EmitSignal(BaseButton.SignalName.Pressed);
             var finalPreview = (NCardRewardSelectionScreen)stack.Peek()!;
-            var closeButton = finalPreview.GetNode<NCardRewardAlternativeButton>("UI/RewardAlternatives/RewardViewerBack");
+            var closeButton = finalPreview.GetNode<NCardRewardAlternativeButton>("UI/RewardAlternatives/CoopBuddyBack");
             ownPending.SetResult(true);
             stack.Remove(ownScreen);
             await Delay(tree);
@@ -472,12 +472,12 @@ internal static class RuntimeTests
             await Frame(tree);
             FreePools();
             RunManager.Instance.CleanUp();
-            GD.Print($"REWARD_VIEWER_TESTS_PASSED: {_passed}");
+            GD.Print($"COOP_BUDDY_TESTS_PASSED: {_passed}");
             tree.Quit();
         }
         catch (Exception exception)
         {
-            GD.PrintErr("REWARD_VIEWER_TESTS_FAILED: " + exception);
+            GD.PrintErr("COOP_BUDDY_TESTS_FAILED: " + exception);
             tree.Quit(1);
         }
     }

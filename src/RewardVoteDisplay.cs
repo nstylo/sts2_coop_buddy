@@ -10,7 +10,7 @@ using MegaCrit.Sts2.Core.Nodes.Screens.CardSelection;
 using MegaCrit.Sts2.Core.Nodes.Screens.ScreenContext;
 using MegaCrit.Sts2.Core.Platform;
 
-namespace RewardViewer;
+namespace CoopBuddy;
 
 // Screen-owned portraits show every recommendation. The viewer's own vote also
 // uses the native highlight. Neither presentation depends on hover state.
@@ -22,7 +22,7 @@ internal sealed class RewardVoteDisplay : IDisposable
     private readonly RewardCollaboration _collaboration;
     private readonly Control _root = new()
     {
-        Name = "RewardViewerVotes", MouseFilter = Control.MouseFilterEnum.Ignore, ZIndex = 10
+        Name = "CoopBuddyVotes", MouseFilter = Control.MouseFilterEnum.Ignore, ZIndex = 10
     };
     private readonly List<(NCardHolder Holder, HBoxContainer Row)> _rows = [];
     private readonly Dictionary<TextureRect, ulong> _portraits = [];

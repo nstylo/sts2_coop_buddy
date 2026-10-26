@@ -3,7 +3,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
 if (args.Length != 1)
-    throw new ArgumentException("Usage: PortabilityChecks /path/to/RewardViewer.dll");
+    throw new ArgumentException("Usage: PortabilityChecks /path/to/CoopBuddy.dll");
 
 using var stream = File.OpenRead(args[0]);
 using var pe = new PEReader(stream);
@@ -25,7 +25,7 @@ Check(references.All(name => name is "sts2" or "GodotSharp" or "0Harmony" ||
 Check(!references.Any(name => name is "System.Windows.Forms" or "System.Drawing.Common" ||
     name.StartsWith("System.Windows.", StringComparison.Ordinal)),
     "no Windows desktop framework references");
-Console.WriteLine("REWARD_VIEWER_PORTABILITY_PASSED: 5");
+Console.WriteLine("COOP_BUDDY_PORTABILITY_PASSED: 5");
 
 static void Check(bool condition, string name)
 {

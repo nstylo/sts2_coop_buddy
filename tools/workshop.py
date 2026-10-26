@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare and upload Co-op Reward Viewer using Mega Crit's official uploader."""
+"""Prepare and upload Co-op Buddy using Mega Crit's official uploader."""
 import argparse
 import hashlib
 import json
@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / "tests"))
 from game_layout import resolve_layout
 
 WORKSPACE = ROOT / "workshop"
-FILES = ("RewardViewer.dll", "RewardViewer.json")
+FILES = ("CoopBuddy.dll", "CoopBuddy.json")
 UPLOADER_VERSION = "v0.2.0"
 # SHA-256 digests published by GitHub for Mega Crit's release assets.
 RELEASES = {
@@ -93,17 +93,17 @@ def validate_workspace():
     image = WORKSPACE / "image.png"
     if not image.is_file() or image.stat().st_size >= 1_000_000 or not image.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
         raise ValueError("workshop/image.png must be a PNG smaller than 1 MB.")
-    source = ROOT / "dist/RewardViewer"
+    source = ROOT / "dist/CoopBuddy"
     content = WORKSPACE / "content"
-    expected = {Path("RewardViewer") / name for name in FILES}
+    expected = {Path("CoopBuddy") / name for name in FILES}
     actual = {path.relative_to(content) for path in content.rglob("*") if path.is_file()}
     if actual != expected or any(path.is_symlink() for path in content.rglob("*")):
-        raise ValueError("Workshop content must contain only content/RewardViewer/RewardViewer.dll and RewardViewer.json. Run prepare.")
+        raise ValueError("Workshop content must contain only content/CoopBuddy/CoopBuddy.dll and CoopBuddy.json. Run prepare.")
     for name in FILES:
-        if (content / "RewardViewer" / name).read_bytes() != (source / name).read_bytes():
-            raise ValueError("Workshop content differs from dist/RewardViewer. Run prepare.")
-    manifest = read_json(source / "RewardViewer.json")
-    if manifest != read_json(ROOT / "RewardViewer.json"):
+        if (content / "CoopBuddy" / name).read_bytes() != (source / name).read_bytes():
+            raise ValueError("Workshop content differs from dist/CoopBuddy. Run prepare.")
+    manifest = read_json(source / "CoopBuddy.json")
+    if manifest != read_json(ROOT / "CoopBuddy.json"):
         raise ValueError("The packaged manifest is stale. Run prepare without --no-build.")
     identity = WORKSPACE / "mod_id.txt"
     saved_id = item_id(identity.read_text().strip()) if identity.exists() else None
@@ -115,22 +115,22 @@ def validate_workspace():
 
 def prepare(build=True, data_dir=None):
     if build:
-        env = dict(os.environ, DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "reward-viewer-dotnet"),
+        env = dict(os.environ, DOTNET_CLI_HOME=str(Path(tempfile.gettempdir()) / "coop-buddy-dotnet"),
                    DOTNET_GENERATE_ASPNET_CERTIFICATE="false", DOTNET_CLI_TELEMETRY_OPTOUT="1")
-        command = ["dotnet", "build", "RewardViewer.csproj", "-t:Rebuild", "-c", "Release", "--disable-build-servers"]
+        command = ["dotnet", "build", "CoopBuddy.csproj", "-t:Rebuild", "-c", "Release", "--disable-build-servers"]
         if data_dir is not None:
             command += [f"-p:Sts2DataDir={data_dir}"]
         subprocess.run(command, cwd=ROOT, env=env, check=True)
-    source = ROOT / "dist/RewardViewer"
+    source = ROOT / "dist/CoopBuddy"
     # Refuse to overwrite unrelated files or accidentally include them in a release.
     content = WORKSPACE / "content"
-    expected = {Path("RewardViewer") / name for name in FILES}
+    expected = {Path("CoopBuddy") / name for name in FILES}
     if any(path.is_symlink() or path.is_file() and path.relative_to(content) not in expected for path in content.rglob("*")):
         raise ValueError("Unexpected files in workshop/content. Move them out before preparing the upload.")
     for name in FILES:
         if not (source / name).is_file():
             raise ValueError(f"Missing {source / name}. Run prepare without --no-build.")
-    destination = content / "RewardViewer"
+    destination = content / "CoopBuddy"
     destination.mkdir(parents=True, exist_ok=True)
     for name in FILES:
         shutil.copyfile(source / name, destination / name)
@@ -144,9 +144,9 @@ def check_branches(public_game, beta_game):
     prepare(data_dir=public.data_dir)
     # Keep the public-built DLL fixed while the test assembly is compiled for each
     # game. The runner installs this same DLL in both loader locations.
-    with tempfile.TemporaryDirectory(prefix="reward-viewer-release-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="coop-buddy-release-") as temporary:
         artifact = Path(temporary)
-        distribution = ROOT / "dist/RewardViewer"
+        distribution = ROOT / "dist/CoopBuddy"
         for name in FILES:
             shutil.copyfile(distribution / name, artifact / name)
         try:
@@ -157,8 +157,8 @@ def check_branches(public_game, beta_game):
         finally:
             for name in FILES:
                 shutil.copyfile(artifact / name, distribution / name)
-            version = read_json(distribution / "RewardViewer.json")["version"]
-            with zipfile.ZipFile(ROOT / f"dist/RewardViewer-{version}.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+            version = read_json(distribution / "CoopBuddy.json")["version"]
+            with zipfile.ZipFile(ROOT / f"dist/CoopBuddy-{version}.zip", "w", zipfile.ZIP_DEFLATED) as archive:
                 for name in FILES:
                     archive.write(distribution / name, name)
     prepare(build=False)
@@ -171,7 +171,7 @@ def main():
     setup = commands.add_parser("setup", help="Download the official uploader for this computer; no Steam login or upload")
     setup.add_argument("--archive", type=Path, help="Install an already downloaded official release ZIP (checksum verified)")
     stage = commands.add_parser("prepare", help="Build and stage only the DLL and manifest; preserve listing metadata and item ID")
-    stage.add_argument("--no-build", action="store_true", help="Use an already built dist/RewardViewer")
+    stage.add_argument("--no-build", action="store_true", help="Use an already built dist/CoopBuddy")
     check = commands.add_parser("check", help="Build against public and test that exact DLL on public and beta")
     check.add_argument("--public", type=Path, required=True, help="Latest public game's folder or macOS .app")
     check.add_argument("--beta", type=Path, required=True, help="Latest beta game's folder or macOS .app")
